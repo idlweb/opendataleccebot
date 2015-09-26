@@ -88,7 +88,7 @@ $db = NULL;
       $telegram->sendMessage($content);
 				$log=$today. ";traffico sent;" .$chat_id. "\n";
 
-			}elseif ($text == "/eventi culturali" || $text == "eventi culturali") {
+			}elseif ($text == "/Lecce Events" || $text == "Lecce Events") {
         $reply = "Eventi culturali in programmazione:\n" .$data->get_events("eventioggi");
         $content = array('chat_id' => $chat_id, 'text' => $reply);
         $telegram->sendMessage($content);
@@ -105,7 +105,7 @@ $db = NULL;
 				 Applicazione sviluppata da Piero Paolicelli @piersoft (agosto 2015). Licenza MIT codice in riuso da : http://iltempe.github.io/Emergenzeprato/
           \nFonti:
           Bollettini rischi   -> Protezione Civile di Lecce su dati.comune.lecce.it tramite il programma InfoAlert365
-          Eventi culturali    -> piattaforma dati.comune.lecce.it
+          Eventi culturali    -> piattaforma dati.comune.lecce.it fonte Lecce Events
           Qualtà dell'Aria    -> piattaforma dati.comune.lecce.it
           Farmacie            -> piattaforma dati.comune.lecce.it
           Benzinai            -> piattaforma openstreemap Lic. odBL
@@ -367,7 +367,7 @@ $db = NULL;
 	// Crea la tastiera
 	 function create_keyboard($telegram, $chat_id)
 		{
-				$option = array(["meteo oggi","previsioni"],["bollettini rischi","temperatura"],["eventi culturali","qualità aria"],["informazioni","traffico"]);
+				$option = array(["meteo oggi","previsioni"],["bollettini rischi","temperatura"],["Lecce Events","qualità aria"],["informazioni","traffico"]);
 				$keyb = $telegram->buildKeyBoard($option, $onetime=false);
 				$content = array('chat_id' => $chat_id, 'reply_markup' => $keyb, 'text' => "[seleziona un'etichetta oppure clicca sulla graffetta e poi *posizione* per segnalarci qualcosa. Aggiornamento risposte ogni minuto]");
 				$telegram->sendMessage($content);
