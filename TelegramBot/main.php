@@ -88,19 +88,22 @@ $db = NULL;
       $telegram->sendMessage($content);
 				$log=$today. ";traffico sent;" .$chat_id. "\n";
 
-			}elseif ($text == "/Lecce Events" || $text == "Lecce Events") {
-        $reply = "Eventi culturali in programmazione:\n" .$data->get_events("eventioggi");
+			}elseif ($text == "/eventi culturali" || $text == "eventi culturali") {
+        $reply = "Eventi culturali in programmazione:\n";
+        $reply .= $data->get_events();
+        //  echo $reply;
+        $reply .="\n\nInfo e testi completi su www.lecce-events.it\n";
+
+       //$reply .=$data->get_traffico("lecce");
         $content = array('chat_id' => $chat_id, 'text' => $reply);
         $telegram->sendMessage($content);
-
-				$log=$today. ";eventi sent;" .$chat_id. "\n";
+				$log=$today. ";eventi sent;" .$chat_id."\n";
 			}
 			//crediti
 			elseif ($text == "/informazioni" || $text == "informazioni") {
 				 $reply = ("openDataLecceBot e' un servizio sperimentale e dimostrativo per segnalazioni meteo e rischio a Lecce.
 				 Puoi:
 				 - selezionare un'etichetta in basso,
-				 - digitare /on o /off nella chat per abilitare o disabili  tare le notifiche automatiche
 				 - mappare una segnalazione inviando la posizione tramite la molletta in basso a sinistra.
 				 Applicazione sviluppata da Piero Paolicelli @piersoft (agosto 2015). Licenza MIT codice in riuso da : http://iltempe.github.io/Emergenzeprato/
           \nFonti:
@@ -160,8 +163,10 @@ $db = NULL;
 				//memorizza lo user_id
             	$statement = "INSERT INTO " . DB_TABLE ." (user_id) VALUES ('" . $user_id . "')";
             	$db->exec($statement);
-				$reply = "Notifiche da openDataLecceBot abilitate. Per disabilitarle digita /off";
-				$content = array('chat_id' => $chat_id, 'text' => $reply);
+		//		$reply = "Notifiche da openDataLecceBot abilitate. Per disabilitarle digita /off";
+        $reply = "Funzione non ancora implementata";
+
+      	$content = array('chat_id' => $chat_id, 'text' => $reply);
 				$telegram->sendMessage($content);
 				$log=$today. ";notification set;" .$chat_id. "\n";
 			}
@@ -171,12 +176,13 @@ $db = NULL;
 				//memorizza lo user_id
             	$statement = "DELETE FROM ". DB_TABLE ." where user_id = '" . $user_id . "'";
             	$db->exec($statement);
-				$reply = "Notifiche da openDataLecceBot disabilitate. Per abilitarle digita /on";
-				$content = array('chat_id' => $chat_id, 'text' => $reply);
+			//	$reply = "Notifiche da openDataLecceBot disabilitate. Per abilitarle digita /on";
+        $reply = "Funzione non ancora implementata";
+
+      	$content = array('chat_id' => $chat_id, 'text' => $reply);
 				$telegram->sendMessage($content);
 				$log=$today. ";notification reset;" .$chat_id. "\n";
 			}
-
 			//----- gestione segnalazioni georiferite : togliere per non gestire le segnalazioni georiferite -----
 			elseif($location!=null)
 			{
@@ -263,16 +269,21 @@ $db = NULL;
     			$db->exec($statement);
     	//		$this->create_keyboard_temp($telegram,$chat_id);
 
-    if ($text=="benzine" || $text=="farmacie" || $text=="musei")
+    if ($text=="benzine" || $text=="farmacie" || $text=="musei" || $text=="fermate")
     {
+      $around=AROUND;
     	$tag="amenity=pharmacy";
     if ($text=="musei") $tag="tourism=museum";
     if ($text=="benzine") $tag="amenity=fuel";
+    if ($text=="fermate") {
+    $tag="highway=bus_stop";
+    $around=500;
+    }
 
     	      $lon=$row[0]['lng'];
     				$lat=$row[0]['lat'];
     	//prelevo dati da OSM sulla base della mia posizione
-    					$osm_data=give_osm_data($lat,$lon,$tag	);
+    					$osm_data=give_osm_data($lat,$lon,$tag,$around);
 
     					//rispondo inviando i dati di Openstreetmap
     					$osm_data_dec = simplexml_load_string($osm_data);
@@ -283,20 +294,24 @@ $db = NULL;
     						$nome="";
     						foreach ($osm_element->tag as $key) {
     print_r($key);
-    							if ($key['k']=='name' || $key['k']=='wheelchair' || $key['k']=='phone' || $key['k']=='addr:street' )
+    							if ($key['k']=='name' || $key['k']=='wheelchair' || $key['k']=='phone' || $key['k']=='addr:street' || $key['k']=='bench'|| $key['k']=='shelter')
     							{
+                    $valore=utf8_encode($key['v']);
+                    $valore=str_replace("yes","si",$valore);
+
     							if ($key['k']=='wheelchair')
     									{
-    											$valore=utf8_encode($key['v'])."\n";
-    											$valore=str_replace("yes","si",$valore);
+
     											$valore=str_replace("limited","con limitazioni",$valore);
     											$nome .="Accessibile da disabili: ".$valore;
     									}
     							if ($key['k']=='phone')	$nome  .="Telefono: ".utf8_encode($key['v'])."\n";
     							if ($key['k']=='addr:street')	$nome .="Indirizzo: ".utf8_encode($key['v'])."\n";
     							if ($key['k']=='name')	$nome  .="Nome: ".utf8_encode($key['v'])."\n";
+	                if ($key['k']=='bench')	$nome  .="Panchina: ".$valore."\n";
+                  if ($key['k']=='shelter')	$nome  .="Pensilina: ".$valore."\n";
 
-    							}
+                  }
 
     						}
     						//gestione musei senza il tag nome
@@ -355,7 +370,7 @@ $db = NULL;
 			$this->create_keyboard($telegram,$chat_id);
 
 			//log
-			file_put_contents(LOG_FILE, $log, FILE_APPEND | LOCK_EX);
+			file_put_contents(dirname(__FILE__).'/./telegram.log', $log, FILE_APPEND | LOCK_EX);
 
 			//db
 		//	$statement = "INSERT INTO " . DB_TABLE_LOG ." (date, text, chat_id, user_id, location, reply_to_msg) VALUES ('" . $today . "','" . $text . "','" . $chat_id . "','" . $user_id . "','" . $location . "','" . $reply_to_msg . "')";
@@ -367,9 +382,9 @@ $db = NULL;
 	// Crea la tastiera
 	 function create_keyboard($telegram, $chat_id)
 		{
-				$option = array(["meteo oggi","previsioni"],["bollettini rischi","temperatura"],["Lecce Events","qualità aria"],["informazioni","traffico"]);
+				$option = array(["meteo oggi","previsioni"],["bollettini rischi","temperatura"],["eventi culturali","qualità aria"],["informazioni","traffico"]);
 				$keyb = $telegram->buildKeyBoard($option, $onetime=false);
-				$content = array('chat_id' => $chat_id, 'reply_markup' => $keyb, 'text' => "[seleziona un'etichetta oppure clicca sulla graffetta e poi *posizione* per segnalarci qualcosa. Aggiornamento risposte ogni minuto]");
+				$content = array('chat_id' => $chat_id, 'reply_markup' => $keyb, 'text' => "[seleziona un'etichetta oppure clicca sulla graffetta e poi 'posizione'. Aggiornamento risposte ogni minuto]");
 				$telegram->sendMessage($content);
 		}
 
@@ -381,7 +396,14 @@ $db = NULL;
 				$content = array('chat_id' => $chat_id, 'reply_markup' => $keyb, 'text' => "[Seleziona la località. Aggiornamento risposte ogni minuto]");
 				$telegram->sendMessage($content);
 		}
-
+    //crea la tastiera per farmacie
+     function create_keyboard_poi($telegram, $chat_id)
+      {
+          $option = array(["farmacie","benzine"],["musei"]);
+          $keyb = $telegram->buildKeyBoard($option, $onetime=false);
+          $content = array('chat_id' => $chat_id, 'reply_markup' => $keyb, 'text' => "[Seleziona il luogo di interesse. Aggiornamento risposte ogni minuto]");
+          $telegram->sendMessage($content);
+      }
 	//controlla le condizioni per gestire le notifiche automatiche
 	function broadcast_manager($db,$telegram)
 		{
@@ -413,10 +435,11 @@ $db = NULL;
   			//nascondo la tastiera e forzo l'utente a darmi una risposta
   			$forcehide=$telegram->buildForceReply(true);
 
-  			//chiedo cosa sta accadendo nel luogo
-//  			$content = array('chat_id' => $chat_id, 'text' => "[Scrivici cosa sta accadendo qui]", 'reply_markup' =>$forcehide, 'reply_to_message_id' =>$bot_request_message_id);
 
-        $content = array('chat_id' => $chat_id, 'text' => "[Cosa vuole comunicarci su questo posto? oppure, in via sperimentale, scriva:\n\nfarmacie\no\nmusei\no\nbenzine (tutto minuscolo).\n\nLe indicheremo quelle più vicine nell'arco di 5km]", 'reply_markup' =>$forcehide, 'reply_to_message_id' =>$bot_request_message_id);
+  			//chiedo cosa sta accadendo nel luogo
+//  		$content = array('chat_id' => $chat_id, 'text' => "[Scrivici cosa sta accadendo qui]", 'reply_markup' =>$forcehide, 'reply_to_message_id' =>$bot_request_message_id);
+
+      $content = array('chat_id' => $chat_id, 'text' => "[Cosa vuole comunicarci su questo posto? oppure scriva:\n\nfarmacie o musei o benzine (tutto minuscolo).\n\nLe indicheremo quelli più vicini nell'arco di 5km]", 'reply_markup' =>$forcehide, 'reply_to_message_id' =>$bot_request_message_id);
 
         $bot_request_message=$telegram->sendMessage($content);
 

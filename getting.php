@@ -4,10 +4,8 @@
 //questa classe deve essere istanziata nei vari JOB che vogliono usare i dati
 //by MT
 
-const PROT_CIV = 'http://page2rss.com/rss/28dbb41c5e425167e4d73bf1b00dd7cd';
-
-
 class getdata {
+
 	//monitoraggio temperatura
 	public function get_forecast($where)
 	{
@@ -90,29 +88,31 @@ class getdata {
 	}
 
 
-	public function get_events($where)
+
+	public function get_events()
 	{
 
 
-	switch ($where) {
-
-	case "eventioggi":
+	$eventi="";
 
 	date_default_timezone_set('Europe/Rome');
 	date_default_timezone_set("UTC");
 	$today=time();
 	// un google sheet fa il parsing del dataset presente su dati.comune.lecce.it
-	$csv = array_map('str_getcsv', file("https://docs.google.com/spreadsheets/d/14Bvk3Pc37xg-1ijTFvs_3qwLhsrbDVuikEqlXnxlwE8/pub?output=csv"));
-	$i=1;
-	//echo $max;
+	$csv = array_map('str_getcsv', file("https://docs.google.com/spreadsheets/d/14Bvk3Pc37xg-1ijTFvs_3qwLhsrbDVuikEqlXnxlwE8/pub?gid=70729341&single=true&output=csv"));
+//	$i=1;
+
 	$count = 0;
 	foreach($csv as $data=>$csv1){
 	   $count = $count+1;
 	}
-	$eventi="";
-	for ($i=0;$i<$count-2;$i++){
 
+	for ($i=0;$i<$count-2;$i++){
+//echo $csv[$i][7]."/n".$csv[$i][8];
 	$html =str_replace("/","-",$csv[$i][7]);
+	$html =str_replace(",",".",$csv[$i][6]);
+		$html =str_replace("|",".",$csv[$i][6]);
+
 	$from = strtotime($html);
 	$html1 =str_replace("/","-",$csv[$i][8]);
 	$to = strtotime($html1);
@@ -124,25 +124,39 @@ class getdata {
 	$eventi .="Tipologia: ".$csv[$i][5]."\n";
 	$eventi .="Organizzatore: ".$csv[$i][3]."\n";
 	$eventi .="Email contatto: ".$csv[$i][2]."\n";
-	$eventi .="Dettagli: ".$csv[$i][6]."\n";
+	//$eventi .="Dettagli: ".$csv[$i][6]."\n";
+	$eventi .="Dettagli: ".preg_replace('/\s+?(\S+)?$/', '', substr($csv[$i][6], 0, 400))."....\n";
 	$eventi .="Luogo: ".$csv[$i][10]."\n";
 	$eventi .="Pagamento: ".$csv[$i][9]."\n";
 	$eventi .="Inizio: ".$csv[$i][7]."\n";
 	$eventi .="Fine: ".$csv[$i][8]."\n";
-	if ($csv[$i][18] !=NULL) $eventi .="Puoi visualizzarlo su :\nhttp://www.openstreetmap.org/?mlat=".$csv[$i][18]."&mlon=".$csv[$i][19]."#map=19/".$csv[$i][18]."/".$csv[$i][19];
+	if ($csv[$i][18] !="") $eventi .="Puoi visualizzarlo su :\nhttp://www.openstreetmap.org/?mlat=".$csv[$i][18]."&mlon=".$csv[$i][19]."#map=19/".$csv[$i][18]."/".$csv[$i][19];
 	$eventi .="\n";
 	}
 	}
 
 
-	break;
+/*
+$i=3; // test
+$eventi .="Titolo: ".$csv[$i][4]."\n";
+$eventi .="Tipologia: ".$csv[$i][5]."\n";
+$eventi .="Organizzatore: ".$csv[$i][3]."\n";
+$eventi .="Email contatto: ".$csv[$i][2]."\n";
+$eventi .="Dettagli: ".$csv[$i][6]."\n";
+$eventi .="Luogo: ".$csv[$i][10]."\n";
+$eventi .="Pagamento: ".$csv[$i][9]."\n";
+$eventi .="Inizio: ".$csv[$i][7]."\n";
+$eventi .="Fine: ".$csv[$i][8]."\n";
+if ($csv[$i][18] !="") $eventi .="Puoi visualizzarlo su :\nhttp://www.openstreetmap.org/?mlat=".$csv[$i][18]."&mlon=".$csv[$i][19]."#map=19/".$csv[$i][18]."/".$csv[$i][19];
+$eventi .="\n";
 
-		}
-
-	//	$eventi="2";
+*/
+	//	echo $eventi;
 	 return $eventi;
 
 	}
+
+
 
 
 	public function get_aria($where)
@@ -153,15 +167,19 @@ class getdata {
 
 	case "lecce":
 	// un google sheet fa il parsing del dataset presente su dati.comune.lecce.it
-	$csv = array_map('str_getcsv', file("https://docs.google.com/spreadsheets/d/1It2A_VDqWFP01Z7UguDDPDrKGY6xD94AdCl7dWgt5YA/pub?gid=1088545279&single=true&output=csv"));
+	$csv = array_map('str_getcsv', file("https://docs.google.com/spreadsheets/d/1It2A_VDqWFP01Z7UguDDPDrKGY6xD94AdCl7dWgt5YA/export?format=csv&gid=1088545279&single=true"));
 	$homepage  =$csv[0][0];
 	$homepage .="\n";
 
-	for ($i=2;$i<=4;$i++){
+	$count = 0;
+	foreach($csv as $data=>$csv1){
+		 $count = $count+1;
+	}
+	for ($i=2;$i<$count;$i++){
 
 	$homepage .="\n";
 	$homepage .="Nome Centralina: ".$csv[$i][0]."\n";
-	$homepage .= "Valore_Pm10: ".$csv[$i][1]." µg/m³\n";
+	$homepage .="Valore_Pm10: ".$csv[$i][1]." µg/m³\n";
 	$homepage .="Valore_Benzene: ".$csv[$i][2]." µg/m³\n";
 	$homepage .="Valore_CO: ".$csv[$i][3]." mg/m³\n";
 	$homepage .="Valore_SO2: ".$csv[$i][4]." µg/m³\n";
@@ -173,11 +191,13 @@ class getdata {
 
 	}
 
+ if (empty($csv[2][0])) $homepage="Errore generico, ti preghiamo di selezionare nuovamente qualità aria";
 
 
 	break;
 
 		}
+	// echo $homepage;
 
 	 return $homepage;
 
