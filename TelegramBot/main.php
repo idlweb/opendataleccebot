@@ -72,6 +72,96 @@ $db = NULL;
   				$log=$today. ";rischi sent;" .$chat_id. "\n";
 
   			}
+        //richiede rischi di oggi a Lecce
+        elseif ($text == "/defribillatori" || $text == "defribillatori") {
+        $reply = $data->get_dae();
+        $reply .="\nPer vedere tutti i luoghi dove è presente un defribillatore clicca qui: http://u.osmfr.org/m/54531/";
+
+        $content = array('chat_id' => $chat_id, 'text' => $reply);
+        $telegram->sendMessage($content);
+
+          $log=$today. ";dae sent;" .$chat_id. "\n";
+
+        }
+        elseif ($text == "/orari scuole" || $text == "orari scuole") {
+
+  	 			$log=$today. ";temp requested;" .$chat_id. "\n";
+  				$this->create_keyboard_temp_orari($telegram,$chat_id);
+  				exit;
+  			}
+        elseif ($text == "/nido" || $text == "nido") {
+        $reply = $data->get_orariscuole("nido");
+
+        $content = array('chat_id' => $chat_id, 'text' => $reply);
+        $telegram->sendMessage($content);
+echo $reply;
+          $log=$today. ";orari sent;" .$chat_id. "\n";
+
+        }
+        elseif ($text == "/infanzia comunale" || $text == "inf.comun.") {
+        $reply = $data->get_orariscuole("infanziacomunale");
+
+        $content = array('chat_id' => $chat_id, 'text' => $reply);
+        $telegram->sendMessage($content);
+         echo $reply;
+          $log=$today. ";orari sent;" .$chat_id. "\n";
+
+        }
+        elseif ($text == "/infanzia statale" || $text == "inf.statale") {
+        $reply = $data->get_orariscuole("infanziastatale");
+
+        $content = array('chat_id' => $chat_id, 'text' => $reply);
+        $telegram->sendMessage($content);
+         echo $reply;
+          $log=$today. ";orari sent;" .$chat_id. "\n";
+
+        }
+        elseif ($text == "/primaria" || $text == "primaria") {
+        $reply = $data->get_orariscuole("primaria");
+        echo $reply;
+        $content = array('chat_id' => $chat_id, 'text' => $reply);
+        $telegram->sendMessage($content);
+      //  $telegram->forwardMessage($content);
+          $log=$today. ";orari sent;" .$chat_id. "\n";
+
+        }
+        elseif ($text == "/secondaria primogrado" || $text == "secondaria primogrado") {
+        $reply = $data->get_orariscuole("secondaria_primogrado");
+
+        $content = array('chat_id' => $chat_id, 'text' => $reply);
+        $telegram->sendMessage($content);
+        echo $reply;
+          $log=$today. ";orari sent;" .$chat_id. "\n";
+
+        }
+        elseif ($text == "/primaria paritaria" || $text == "primaria paritaria") {
+        $reply = $data->get_orariscuole("primariaparitaria");
+
+        $content = array('chat_id' => $chat_id, 'text' => $reply);
+        $telegram->sendMessage($content);
+        echo $reply;
+          $log=$today. ";orari sent;" .$chat_id. "\n";
+
+        }
+        elseif ($text == "/infanzia paritaria" || $text == "inf.paritaria") {
+        $reply = $data->get_orariscuole("infanziaparitaria");
+
+        $content = array('chat_id' => $chat_id, 'text' => $reply);
+        $telegram->sendMessage($content);
+        echo $reply;
+          $log=$today. ";orari sent;" .$chat_id. "\n";
+
+        }
+        elseif ($text == "tariffasosta" && $location==null) {
+
+          $reply ="Invia la tua posizione cliccando sulla graffetta \xF0\x9F\x93\x8E e poi digita sosta";
+
+          $content = array('chat_id' => $chat_id, 'text' => $reply);
+          $telegram->sendMessage($content);
+
+            $log=$today. ";tariffa_antegps sent;" .$chat_id. "\n";
+
+  			}
 			//richiede rischi di oggi a Lecce
 			elseif ($text == "/aria" || $text == "qualità aria") {
       $reply = $data->get_aria("lecce");
@@ -110,6 +200,7 @@ $db = NULL;
           Bollettini rischi   -> Protezione Civile di Lecce su dati.comune.lecce.it tramite il programma InfoAlert365
           Eventi culturali    -> piattaforma dati.comune.lecce.it fonte Lecce Events
           Qualtà dell'Aria    -> piattaforma dati.comune.lecce.it
+          Defribillatori DAE  -> piattaforma dati.comune.lecce.it
           Farmacie            -> piattaforma dati.comune.lecce.it
           Benzinai            -> piattaforma openstreemap Lic. odBL
           Musei               -> piattaforma openstreemap Lic. odBL
@@ -269,10 +360,22 @@ $db = NULL;
     			$db->exec($statement);
     	//		$this->create_keyboard_temp($telegram,$chat_id);
 
-    if ($text=="benzine" || $text=="farmacie" || $text=="musei" || $text=="fermate")
+    if ($text=="benzine" || $text=="farmacie" || $text=="musei" || $text=="fermate" || $text=="sosta")
     {
       $around=AROUND;
     	$tag="amenity=pharmacy";
+
+    if ($text=="sosta") {
+            $lon=$row[0]['lng'];
+            $lat=$row[0]['lat'];
+            $reply ="Clicca sulla mappa: http://www.piersoft.it/ztl/?lat=".$lat."&lon=".$lon;
+
+            $content = array('chat_id' => $chat_id, 'text' => $reply);
+            $telegram->sendMessage($content);
+
+              $log=$today. ";tariffa_antegps sent;" .$chat_id. "\n";
+exit;
+          }
     if ($text=="musei") $tag="tourism=museum";
     if ($text=="benzine") $tag="amenity=fuel";
     if ($text=="fermate") {
@@ -293,7 +396,7 @@ $db = NULL;
 
     						$nome="";
     						foreach ($osm_element->tag as $key) {
-    print_r($key);
+                  //print_r($key);
     							if ($key['k']=='name' || $key['k']=='wheelchair' || $key['k']=='phone' || $key['k']=='addr:street' || $key['k']=='bench'|| $key['k']=='shelter')
     							{
                     $valore=utf8_encode($key['v']);
@@ -382,9 +485,9 @@ $db = NULL;
 	// Crea la tastiera
 	 function create_keyboard($telegram, $chat_id)
 		{
-				$option = array(["meteo oggi","previsioni"],["bollettini rischi","temperatura"],["eventi culturali","qualità aria"],["informazioni","traffico"]);
+				$option = array(["meteo oggi","previsioni"],["bollettini rischi","temperatura"],["eventi culturali","qualità aria"],["defribillatori","orari scuole"],["tariffasosta","traffico"],["informazioni"]);
 				$keyb = $telegram->buildKeyBoard($option, $onetime=false);
-				$content = array('chat_id' => $chat_id, 'reply_markup' => $keyb, 'text' => "[seleziona un'etichetta oppure clicca sulla graffetta e poi 'posizione'. Aggiornamento risposte ogni minuto]");
+				$content = array('chat_id' => $chat_id, 'reply_markup' => $keyb, 'text' => "[seleziona un'etichetta oppure clicca sulla graffetta \xF0\x9F\x93\x8E e poi 'posizione'. Aggiornamento risposte ogni minuto]");
 				$telegram->sendMessage($content);
 		}
 
@@ -396,6 +499,14 @@ $db = NULL;
 				$content = array('chat_id' => $chat_id, 'reply_markup' => $keyb, 'text' => "[Seleziona la località. Aggiornamento risposte ogni minuto]");
 				$telegram->sendMessage($content);
 		}
+    //crea la tastiera per scegliere tipo di scuola
+  	 function create_keyboard_temp_orari($telegram, $chat_id)
+  		{
+  				$option = array(["inf.statale","inf.comun.","inf.paritaria"],["primaria","primaria paritaria"],["secondaria primogrado"]);
+  				$keyb = $telegram->buildKeyBoard($option, $onetime=false);
+  				$content = array('chat_id' => $chat_id, 'reply_markup' => $keyb, 'text' => "[Seleziona la tipologia di scuola. Aggiornamento risposte ogni minuto]");
+  				$telegram->sendMessage($content);
+  		}
     //crea la tastiera per farmacie
      function create_keyboard_poi($telegram, $chat_id)
       {
@@ -439,7 +550,7 @@ $db = NULL;
   			//chiedo cosa sta accadendo nel luogo
 //  		$content = array('chat_id' => $chat_id, 'text' => "[Scrivici cosa sta accadendo qui]", 'reply_markup' =>$forcehide, 'reply_to_message_id' =>$bot_request_message_id);
 
-      $content = array('chat_id' => $chat_id, 'text' => "[Cosa vuole comunicarci su questo posto? oppure scriva:\n\nfarmacie o musei o benzine (tutto minuscolo).\n\nLe indicheremo quelli più vicini nell'arco di 5km]", 'reply_markup' =>$forcehide, 'reply_to_message_id' =>$bot_request_message_id);
+      $content = array('chat_id' => $chat_id, 'text' => "[Cosa vuole comunicarci su questo posto? oppure scriva:\n\nfarmacie o musei o benzine o sosta \n(tutto minuscolo).\n\nLe indicheremo quelli più vicini nell'arco di 5km]", 'reply_markup' =>$forcehide, 'reply_to_message_id' =>$bot_request_message_id);
 
         $bot_request_message=$telegram->sendMessage($content);
 

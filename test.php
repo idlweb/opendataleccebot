@@ -8,7 +8,7 @@ include("getting.php");
 
 $data=new getdata();
 
-
+/*
 print("---Previsioni---\r\n");
 $test=$data->get_forecast("Lecce");
 print($test);
@@ -56,19 +56,33 @@ foreach($divs as $div) {
 }
 echo $allerta;
 
-print("---Eventi---\r\n");
-
-echo "<br>";
-
-print("---Eventi di Oggi---\r\n");
-$test=$data->get_events("eventioggi");
-
 
 print("---Aria di Oggi---\r\n");
 $test=$data->get_aria("lecce");
 
 print("---Traffico di Oggi---\r\n");
 $test=$data->get_traffico("lecce");
+*/
+/*
+echo "<br>";
 
+print("---Eventi di Oggi---\r\n");
+$test=$data->get_events();
+echo $test;
+
+echo "<br>";
+
+print("---defribillatori---\r\n");
+$test=$data->get_dae();
+echo $test;
+
+print("---scuola---\r\n");
+$test=$data->get_orariscuole(primaria);
+echo $test;
+*/
+
+print("---get_allertameteo---\r\n");
+$test=$data->get_allertameteo("Lecceoggi");
+echo $test;
 
 ?>

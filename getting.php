@@ -1,4 +1,4 @@
-<?php
+ <?php
 
 //Wrapper delle fonti #emergenzeprato e preparazione dati di interesse per i vari bot
 //questa classe deve essere istanziata nei vari JOB che vogliono usare i dati
@@ -36,7 +36,8 @@ class getdata {
 	 return $temp_c1.$temp_c2.$temp_c3.$temp_c4.$temp_c5.$temp_c6;
 
 	}
-	//scraping dal sito web della PPC Lecce
+
+  //scraping dal sito web della PPC Lecce
 	public function get_allertameteo($where)
 	{
 
@@ -44,28 +45,20 @@ class getdata {
 
 	case "Lecceoggi":
 
-	$html = file_get_contents('http://ppc-lecce.3plab.it');
-	$html = iconv('ASCII', 'UTF-8//IGNORE', $html);
+	$html = file_get_contents('http://ppc-lecce.3plab.it/');
+	//$html = iconv('ASCII', 'UTF-8//IGNORE', $html);
+$html=utf8_decode($html);
+
+  $html = sprintf('<html><head><title></title></head><body>%s</body></html>', $html);
 	$html = sprintf('<html><head><title></title></head><body>%s</body></html>', $html);
 	$html = sprintf('<html><head><title></title></head><body>%s</body></html>', $html);
-	$html = sprintf('<html><head><title></title></head><body>%s</body></html>', $html);
+
 	$html =str_replace("Consulta il","<!--",$html);
 	$html =str_replace("Commenti disabilitati","-->",$html);
 	$html =str_replace("Estratto, per la Zona di Allerta del Comune, del Messaggio di Allerta","",$html);
 	$html =str_replace("larea","l&#39;area",$html);
 	$html =str_replace("Articoli meno recenti","",$html);
 	$html =str_replace("←","",$html);
-	$html =str_replace("Criticit","Criticit&#224;",$html);
-	$html =str_replace("Visibilit","Visibilit&#224;",$html);
-	$html =str_replace("Luned","Luned&#236;",$html);
-	$html =str_replace("Marted","Marted&#236;",$html);
-	$html =str_replace("Mercoled","Mercoled&#236;",$html);
-	$html =str_replace("Gioved","Gioved&#236;",$html);
-	$html =str_replace("Venerd","Venerd&#236;",$html);
-	$html =str_replace("Viabilit","Venerd&#236;",$html);
-
-
-
 
 	$doc = new DOMDocument;
 	$doc->loadHTML($html);
@@ -78,7 +71,9 @@ class getdata {
 
 	foreach($divs as $div) {
 	    $allerta .= "\n".$div->nodeValue;
+
 	}
+  //$allerta .=preg_replace('/\s+?(\S+)?$/', '', substr($allerta, 0, 400))."....\n";
 
 	break;
 
@@ -86,7 +81,6 @@ class getdata {
 	 return $allerta;
 
 	}
-
 
 
 	public function get_events()
@@ -158,6 +152,330 @@ $eventi .="\n";
 
 
 
+	public function get_dae($where)
+	{
+	$homepage="";
+
+
+	// un google sheet fa il parsing del dataset presente su dati.comune.lecce.it
+	$csv = array_map('str_getcsv', file("https://docs.google.com/spreadsheets/d/1dAPW1JSr3bQMFNBM3TF7kFGa95KZT5oY-72QjKipbeQ/export?format=csv&gid=1704313359&single=true"));
+//	$homepage  =$csv[0][0];
+//	$homepage .="\n";
+
+	$count = 0;
+	foreach($csv as $data=>$csv1){
+		 $count = $count+1;
+	}
+	for ($i=1;$i<$count;$i++){
+
+	$homepage .="\n";
+	$homepage .=$csv[$i][3]."\n";
+//	$homepage = $csv[$i][4]." ".$csv[$i][5]." ".$csv[$i][6]."\n";
+//	$homepage = "Descrizione: ".utf8_encode($csv[$i][5])."\n";
+	$homepage .="Puoi visualizzarlo su :\nhttp://www.openstreetmap.org/?mlat=".$csv[$i][1]."&mlon=".$csv[$i][2]."#map=19/".$csv[$i][0]."/".$csv[$i][1];
+	$homepage .="\n";
+//	$homepage .="Per vedere tutti i luoghi dove è presente un defribillatore clicca qui: http://u.osmfr.org/m/54531/"
+
+	}
+
+	if (empty($csv[1][0])) $homepage="Errore generico, ti preghiamo di selezionare nuovamente qualità aria";
+
+
+	 echo $homepage;
+
+	 return $homepage;
+
+	}
+
+
+  public function get_orariscuole($where)
+	{
+	   $homepage="";
+     switch ($where) {
+
+    case "nido":
+
+
+    // un google sheet fa il parsing del dataset presente su dati.comune.lecce.it
+    $csv = array_map('str_getcsv', file("https://spreadsheets.google.com/tq?tqx=out:csv&tq=SELECT%20A%2CB%2CC%2CD%2CE%2CF%2CG%2CH%2CI%2CJ%2CK%2CL%2CM%2CN%2CO%2CP%2CQ%2CR%2CS%20WHERE%20C%20LIKE%20%27%25NIDO%25%27&key=1EJb0cq6a5C5NzgBZiP-KBAs4C_TIgi_b9vmffROp0QU"));
+  //	$homepage  =$csv[0][0];
+  //	$homepage .="\n";
+
+    $count = 0;
+    foreach($csv as $data=>$csv1){
+       $count = $count+1;
+    }
+    for ($i=1;$i<$count;$i++){
+
+      $homepage .="\n";
+      $homepage .=$csv[$i][1]."\n";
+      $homepage .="Tipol.: ".$csv[$i][2]."\n";
+      //      $homepage .="Categoria: ".$csv[$i][3]."\n";
+      $homepage .="Indir.: ".$csv[$i][4]."\n";
+          $homepage .="Lun. ".$csv[$i][5]."/".$csv[$i][6]."\n";
+          $homepage .="Mar. ".$csv[$i][7]."/".$csv[$i][8]."\n";
+          $homepage .="Merc.".$csv[$i][9]."/".$csv[$i][10]."\n";
+          $homepage .="Giov.".$csv[$i][11]."/".$csv[$i][12]."\n";
+          $homepage .="Ven. ".$csv[$i][13]."/".$csv[$i][14]."\n";
+          $homepage .="Sab. ".$csv[$i][15]."/".$csv[$i][16]."\n";
+
+      //	$homepage .="Puoi visualizzarlo su :\nhttp://www.openstreetmap.org/?mlat=".$csv[$i][17]."&mlon=".$csv[$i][18]."#map=19/".$csv[$i][17]."/".$csv[$i][18];
+    $homepage .="\n";
+  //	$homepage .="Per vedere tutti i luoghi dove è presente un defribillatore clicca qui: http://u.osmfr.org/m/54531/"
+
+    }
+
+    if (empty($csv[1][0])) $homepage="Errore generico, ti preghiamo di selezionare nuovamente gli orari";
+
+
+  //   echo $homepage;
+     break;
+
+
+
+  case "infanziastatale":
+
+	// un google sheet fa il parsing del dataset presente su dati.comune.lecce.it
+	$csv = array_map('str_getcsv', file("https://spreadsheets.google.com/tq?tqx=out:csv&tq=SELECT%20A%2CB%2CC%2CD%2CE%2CF%2CG%2CH%2CI%2CJ%2CK%2CL%2CM%2CN%2CO%2CP%2CQ%2CR%2CS%20WHERE%20D%20LIKE%20%27%25STATALE%25%27%20AND%20C%20LIKE%20%27%25INFANZIA%25%27&key=1EJb0cq6a5C5NzgBZiP-KBAs4C_TIgi_b9vmffROp0QU"));
+//	$homepage  =$csv[0][0];
+//	$homepage .="\n";
+
+	$count = 0;
+	foreach($csv as $data=>$csv1){
+		 $count = $count+1;
+	}
+  echo $count;
+	for ($i=1;$i<$count;$i++){
+
+    $homepage .="\n";
+    $homepage .=$csv[$i][1]."\n";
+    $homepage .="Tipol.: ".$csv[$i][2]."\n";
+    //      $homepage .="Categoria: ".$csv[$i][3]."\n";
+    $homepage .="Indir.: ".$csv[$i][4]."\n";
+        $homepage .="Lun. ".$csv[$i][5]."/".$csv[$i][6]."\n";
+        $homepage .="Mar. ".$csv[$i][7]."/".$csv[$i][8]."\n";
+        $homepage .="Merc.".$csv[$i][9]."/".$csv[$i][10]."\n";
+        $homepage .="Giov.".$csv[$i][11]."/".$csv[$i][12]."\n";
+        $homepage .="Ven. ".$csv[$i][13]."/".$csv[$i][14]."\n";
+        $homepage .="Sab. ".$csv[$i][15]."/".$csv[$i][16]."\n";
+
+//	$homepage .="Puoi visualizzarlo su :\nhttp://www.openstreetmap.org/?mlat=".$csv[$i][17]."&mlon=".$csv[$i][18]."#map=19/".$csv[$i][17]."/".$csv[$i][18];
+	$homepage .="\n";
+//	$homepage .="Per vedere tutti i luoghi dove è presente un defribillatore clicca qui: http://u.osmfr.org/m/54531/"
+
+	}
+
+	if (empty($csv[1][0])) $homepage="Errore generico, ti preghiamo di selezionare nuovamente gli orari";
+
+
+	// echo $homepage;
+   break;
+
+   case "infanziacomunale":
+
+ 	// un google sheet fa il parsing del dataset presente su dati.comune.lecce.it
+ 	$csv = array_map('str_getcsv', file("https://spreadsheets.google.com/tq?tqx=out:csv&tq=SELECT%20A%2CB%2CC%2CD%2CE%2CF%2CG%2CH%2CI%2CJ%2CK%2CL%2CM%2CN%2CO%2CP%2CQ%2CR%2CS%20WHERE%20D%20LIKE%20%27%25COMUNALE%25%27%20AND%20C%20LIKE%20%27%25INFANZIA%25%27&key=1EJb0cq6a5C5NzgBZiP-KBAs4C_TIgi_b9vmffROp0QU"));
+ //	$homepage  =$csv[0][0];
+ //	$homepage .="\n";
+
+ 	$count = 0;
+ 	foreach($csv as $data=>$csv1){
+ 		 $count = $count+1;
+ 	}
+   echo $count;
+ 	for ($i=1;$i<$count;$i++){
+
+     $homepage .="\n";
+     $homepage .=$csv[$i][1]."\n";
+     $homepage .="Tipol.: ".$csv[$i][2]."\n";
+     $homepage .="Categoria: ".$csv[$i][3]."\n";
+     $homepage .="Indir.: ".$csv[$i][4]."\n";
+         $homepage .="Lun. ".$csv[$i][5]."/".$csv[$i][6]."\n";
+         $homepage .="Mar. ".$csv[$i][7]."/".$csv[$i][8]."\n";
+         $homepage .="Merc.".$csv[$i][9]."/".$csv[$i][10]."\n";
+         $homepage .="Giov.".$csv[$i][11]."/".$csv[$i][12]."\n";
+         $homepage .="Ven. ".$csv[$i][13]."/".$csv[$i][14]."\n";
+         $homepage .="Sab. ".$csv[$i][15]."/".$csv[$i][16]."\n";
+
+ //	$homepage .="Puoi visualizzarlo su :\nhttp://www.openstreetmap.org/?mlat=".$csv[$i][17]."&mlon=".$csv[$i][18]."#map=19/".$csv[$i][17]."/".$csv[$i][18];
+ 	$homepage .="\n";
+ //	$homepage .="Per vedere tutti i luoghi dove è presente un defribillatore clicca qui: http://u.osmfr.org/m/54531/"
+
+ 	}
+
+ 	if (empty($csv[1][0])) $homepage="Errore generico, ti preghiamo di selezionare nuovamente gli orari";
+
+
+ 	// echo $homepage;
+    break;
+   case "infanziaparitaria":
+
+
+   // un google sheet fa il parsing del dataset presente su dati.comune.lecce.it
+   $csv = array_map('str_getcsv', file("https://spreadsheets.google.com/tq?tqx=out:csv&tq=SELECT%20A%2CB%2CC%2CD%2CE%2CF%2CG%2CH%2CI%2CJ%2CK%2CL%2CM%2CN%2CO%2CP%2CQ%2CR%2CS%20WHERE%20D%20LIKE%20%27%25PARITARIA%25%27%20AND%20C%20LIKE%20%27%25INFANZIA%25%27&key=1EJb0cq6a5C5NzgBZiP-KBAs4C_TIgi_b9vmffROp0QU"));
+   //	$homepage  =$csv[0][0];
+   //	$homepage .="\n";
+
+   $count = 0;
+   foreach($csv as $data=>$csv1){
+      $count = $count+1;
+   }
+   echo $count;
+   for ($i=1;$i<$count;$i++){
+
+     $homepage .="\n";
+     $homepage .=$csv[$i][1]."\n";
+     $homepage .="Tipol.: ".$csv[$i][2]."\n";
+     $homepage .="Categoria: ".$csv[$i][3]."\n";
+     $homepage .="Indir.: ".$csv[$i][4]."\n";
+         $homepage .="Lun. ".$csv[$i][5]."/".$csv[$i][6]."\n";
+         $homepage .="Mar. ".$csv[$i][7]."/".$csv[$i][8]."\n";
+         $homepage .="Merc.".$csv[$i][9]."/".$csv[$i][10]."\n";
+         $homepage .="Giov.".$csv[$i][11]."/".$csv[$i][12]."\n";
+         $homepage .="Ven. ".$csv[$i][13]."/".$csv[$i][14]."\n";
+         $homepage .="Sab. ".$csv[$i][15]."/".$csv[$i][16]."\n";
+
+   //	$homepage .="Puoi visualizzarlo su :\nhttp://www.openstreetmap.org/?mlat=".$csv[$i][17]."&mlon=".$csv[$i][18]."#map=19/".$csv[$i][17]."/".$csv[$i][18];
+   $homepage .="\n";
+   //	$homepage .="Per vedere tutti i luoghi dove è presente un defribillatore clicca qui: http://u.osmfr.org/m/54531/"
+
+   }
+
+   if (empty($csv[1][0])) $homepage="Errore generico, ti preghiamo di selezionare nuovamente gli orari";
+
+
+   // echo $homepage;
+    break;
+
+
+   case "primariaparitaria":
+
+
+  // un google sheet fa il parsing del dataset presente su dati.comune.lecce.it
+  $csv = array_map('str_getcsv', file("https://spreadsheets.google.com/tq?tqx=out:csv&tq=SELECT%20A%2CB%2CC%2CD%2CE%2CF%2CG%2CH%2CI%2CJ%2CK%2CL%2CM%2CN%2CO%2CP%2CQ%2CR%2CS%20WHERE%20D%20LIKE%20%27%25PARITARIA%25%27%20AND%20C%20LIKE%20%27%25PRIMARIA%25%27&key=1EJb0cq6a5C5NzgBZiP-KBAs4C_TIgi_b9vmffROp0QU"));
+ //	$homepage  =$csv[0][0];
+ //	$homepage .="\n";
+
+  $count = 0;
+  foreach($csv as $data=>$csv1){
+     $count = $count+1;
+  }
+
+  echo $count;
+  for ($i=1;$i<$count;$i++){
+//    for ($i=1;$i<18;$i++){
+
+
+$homepage .="\n";
+$homepage .=$csv[$i][1]."\n";
+$homepage .="Tipol.: ".$csv[$i][2]."\n";
+$homepage .="Categoria: ".$csv[$i][3]."\n";
+$homepage .="Indir.: ".$csv[$i][4]."\n";
+    $homepage .="Lun. ".$csv[$i][5]."/".$csv[$i][6]."\n";
+    $homepage .="Mar. ".$csv[$i][7]."/".$csv[$i][8]."\n";
+    $homepage .="Merc.".$csv[$i][9]."/".$csv[$i][10]."\n";
+    $homepage .="Giov.".$csv[$i][11]."/".$csv[$i][12]."\n";
+    $homepage .="Ven. ".$csv[$i][13]."/".$csv[$i][14]."\n";
+    $homepage .="Sab. ".$csv[$i][15]."/".$csv[$i][16]."\n";
+
+
+    //	$homepage .="Puoi visualizzarlo su :\nhttp://www.openstreetmap.org/?mlat=".$csv[$i][17]."&mlon=".$csv[$i][18]."#map=19/".$csv[$i][17]."/".$csv[$i][18];
+  $homepage .="\n";
+ //	$homepage .="Per vedere tutti i luoghi dove è presente un defribillatore clicca qui: http://u.osmfr.org/m/54531/"
+
+  }
+
+  if (empty($csv[1][0])) $homepage="Errore generico, ti preghiamo di selezionare nuovamente gli orari";
+
+
+   //echo $homepage;
+    break;
+    case "primaria":
+
+
+    // un google sheet fa il parsing del dataset presente su dati.comune.lecce.it
+    $csv = array_map('str_getcsv', file("https://spreadsheets.google.com/tq?tqx=out:csv&tq=SELECT%20A%2CB%2CC%2CD%2CE%2CF%2CG%2CH%2CI%2CJ%2CK%2CL%2CM%2CN%2CO%2CP%2CQ%2CR%2CS%20WHERE%20D%20LIKE%20%27%25STATALE%25%27%20AND%20C%20LIKE%20%27%25PRIMARIA%25%27&key=1EJb0cq6a5C5NzgBZiP-KBAs4C_TIgi_b9vmffROp0QU"));
+    //	$homepage  =$csv[0][0];
+    //	$homepage .="\n";
+
+    $count = 0;
+    foreach($csv as $data=>$csv1){
+      $count = $count+1;
+    }
+
+    echo $count;
+    for ($i=1;$i<$count;$i++){
+    //    for ($i=1;$i<18;$i++){
+
+
+    $homepage .="\n";
+    $homepage .=$csv[$i][1]."\n";
+    $homepage .="Tipol.: ".$csv[$i][2]."\n";
+    $homepage .="Categoria: ".$csv[$i][3]."\n";
+    $homepage .="Indir.: ".$csv[$i][4]."\n";
+     $homepage .="Lun. ".$csv[$i][5]."/".$csv[$i][6]."\n";
+     $homepage .="Mar. ".$csv[$i][7]."/".$csv[$i][8]."\n";
+     $homepage .="Merc.".$csv[$i][9]."/".$csv[$i][10]."\n";
+     $homepage .="Giov.".$csv[$i][11]."/".$csv[$i][12]."\n";
+     $homepage .="Ven. ".$csv[$i][13]."/".$csv[$i][14]."\n";
+     $homepage .="Sab. ".$csv[$i][15]."/".$csv[$i][16]."\n";
+
+
+     //	$homepage .="Puoi visualizzarlo su :\nhttp://www.openstreetmap.org/?mlat=".$csv[$i][17]."&mlon=".$csv[$i][18]."#map=19/".$csv[$i][17]."/".$csv[$i][18];
+    $homepage .="\n";
+    //	$homepage .="Per vedere tutti i luoghi dove è presente un defribillatore clicca qui: http://u.osmfr.org/m/54531/"
+
+    }
+
+    if (empty($csv[1][0])) $homepage="Errore generico, ti preghiamo di selezionare nuovamente gli orari";
+
+
+    //echo $homepage;
+     break;
+
+
+    case "secondaria_primogrado":
+
+
+    // un google sheet fa il parsing del dataset presente su dati.comune.lecce.it
+    $csv = array_map('str_getcsv', file("https://spreadsheets.google.com/tq?tqx=out:csv&tq=SELECT%20A%2CB%2CC%2CD%2CE%2CF%2CG%2CH%2CI%2CJ%2CK%2CL%2CM%2CN%2CO%2CP%2CQ%2CR%2CS%20WHERE%20C%20LIKE%20%27%25SECONDARIA%25%27&key=1EJb0cq6a5C5NzgBZiP-KBAs4C_TIgi_b9vmffROp0QU"));
+  //	$homepage  =$csv[0][0];
+  //	$homepage .="\n";
+
+    $count = 0;
+    foreach($csv as $data=>$csv1){
+       $count = $count+1;
+    }
+    for ($i=1;$i<$count;$i++){
+
+      $homepage .="\n";
+      $homepage .=$csv[$i][1]."\n";
+      $homepage .="Tipol.: ".$csv[$i][2]."\n";
+      $homepage .="Categoria: ".$csv[$i][3]."\n";
+      $homepage .="Indir.: ".$csv[$i][4]."\n";
+          $homepage .="Lun. ".$csv[$i][5]."/".$csv[$i][6]."\n";
+          $homepage .="Mar. ".$csv[$i][7]."/".$csv[$i][8]."\n";
+          $homepage .="Merc.".$csv[$i][9]."/".$csv[$i][10]."\n";
+          $homepage .="Giov.".$csv[$i][11]."/".$csv[$i][12]."\n";
+          $homepage .="Ven. ".$csv[$i][13]."/".$csv[$i][14]."\n";
+          $homepage .="Sab. ".$csv[$i][15]."/".$csv[$i][16]."\n";
+
+      //	$homepage .="Puoi visualizzarlo su :\nhttp://www.openstreetmap.org/?mlat=".$csv[$i][17]."&mlon=".$csv[$i][18]."#map=19/".$csv[$i][17]."/".$csv[$i][18];
+    $homepage .="\n";
+  //	$homepage .="Per vedere tutti i luoghi dove è presente un defribillatore clicca qui: http://u.osmfr.org/m/54531/"
+
+    }
+
+    if (empty($csv[1][0])) $homepage="Errore generico, ti preghiamo di selezionare nuovamente gli orari";
+
+
+  //   echo $homepage;
+     break;
+
+	}
+	  return $homepage;
+
+	}
 
 	public function get_aria($where)
 	{
@@ -226,7 +544,9 @@ $eventi .="\n";
 	$homepage .="Descrizione: ".$csv[$i][1]."\n";
 	$homepage .="Data: ".$csv[$i][2]."\n";
 	$homepage .="Luogo: ".$csv[$i][3]."\n";
-	$homepage .="Mappa: http://www.openstreetmap.org/#map=19/".$csv[$i][4]."/".$csv[$i][5];
+	$homepage .="Puoi visualizzarlo su :\nhttp://www.openstreetmap.org/?mlat=".$csv[$i][4]."&mlon=".$csv[$i][5]."#map=19/".$csv[$i][4]."/".$csv[$i][5];
+
+	//$homepage .="Mappa: http://www.openstreetmap.org/#map=19/".$csv[$i][4]."/".$csv[$i][5];
 	$homepage .="\n";
 
 
