@@ -1,7 +1,9 @@
 <?php
 
 //file di test
-
+$lat=$_GET["lat"];
+$lon=$_GET["lon"];
+$r=$_GET["raggio"];
 include("getting.php");
 
 
@@ -81,8 +83,16 @@ $test=$data->get_orariscuole(primaria);
 echo $test;
 */
 
-print("---get_allertameteo---\r\n");
-$test=$data->get_allertameteo("Lecceoggi");
+//print("---get_parcheggi---\r\n");
+//$lat=41.1181;
+//$lon=16.86953;
+$test=$data->get_fermateba($lat,$lon,$r);
 echo $test;
+
+/*
+$test=$data->get_parcheggi();
+echo $test;
+
+*/
 
 ?>

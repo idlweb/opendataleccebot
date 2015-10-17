@@ -1,10 +1,165 @@
  <?php
 
-//Wrapper delle fonti #emergenzeprato e preparazione dati di interesse per i vari bot
-//questa classe deve essere istanziata nei vari JOB che vogliono usare i dati
-//by MT
+include(dirname(__FILE__).'/../settings_t.php');
 
 class getdata {
+
+  public function get_fermateba($lat,$lon,$r)
+  {
+
+
+
+      $json_string = file_get_contents("http://bari.opendata.planetek.it/OrariBus/v2.1/OpenDataService.svc/REST/rete/FermateVicine/".$lat."/".$lon."/".$r/10);
+      $parsed_json = json_decode($json_string);
+      $count = 0;
+      $countl = [];
+      foreach($parsed_json as $data=>$csv1){
+         $count = $count+1;
+      }
+      $r10=$r/10;
+      echo "<strong>Fermate più vicine rispetto a ".$lat."/".$lon." in raggio di ".$r10." metri con relative linee urbane ed orari arrivi</strong><br><br>\n";
+  //    $count=1;
+    $IdFermata="";
+    //  echo $count;
+  for ($i=0;$i<$count;$i++){
+    foreach($parsed_json[$i]->{'ListaLinee'} as $data=>$csv1){
+       $countl[$i] = $countl[$i]+1;
+      }
+    //echo $countl;
+      $temp_c1 .="Fermata: ".$parsed_json[$i]->{'DescrizioneFermata'}."\n<br>Id Fermata: ".$parsed_json[$i]->{'IdFermata'};
+      $temp_c1 .="\n<br>Visualizzala su :\nhttp://www.openstreetmap.org/?mlat=".$parsed_json[$i]->{'PosizioneFermata'}->{'Latitudine'}."&mlon=".$parsed_json[$i]->{'PosizioneFermata'}->{'Longitudine'}."#map=19/".$parsed_json[$i]->{'PosizioneFermata'}->{'Latitudine'}."/".$parsed_json[$i]->{'PosizioneFermata'}->{'Longitudine'};
+      $temp_c1 .="\n<br>Linee servite :";
+      for ($l=0;$l<$countl[$i];$l++)
+        {
+
+
+      $temp_c1 .="\n<br>Linee: ".$parsed_json[$i]->{'ListaLinee'}[$l]->{'IdLinea'}." ".$parsed_json[$i]->{'ListaLinee'}[$l]->{'Direzione'};
+         }
+      $temp_c1 .="";
+
+
+      // inzio sotto routine per orari per linee afferenti alla fermata:
+
+      $IdFermata=$parsed_json[$i]->{'IdFermata'};
+  //    echo $IdFermata;
+      $json_string1 = file_get_contents("http://bari.opendata.planetek.it/OrariBus/v2.1/OpenDataService.svc/REST/OrariPalina/".$IdFermata."/");
+      $parsed_json1 = json_decode($json_string1);
+    //  var_dump($parsed_json1);
+    //  var_dump($parsed_json1->{'PrevisioniLinee'}[0]);
+      $countf = 0 ;
+      foreach($parsed_json1->{'PrevisioniLinee'} as $data123=>$csv113){
+         $countf = $countf+1;
+      }
+  //    echo $countf;
+      $h = "2";// Hour for time zone goes here e.g. +7 or -4, just remove the + or -
+      $hm = $h * 60;
+      $ms = $hm * 60;
+      date_default_timezone_set('UTC');
+      for ($f=0;$f<$countf;$f++){
+
+        $time =$parsed_json1->{'PrevisioniLinee'}[$f]->{'OrarioArrivo'}; //registro nel DB anche il tempo unix
+    //    echo "\n<br>timestamp:".$time."senza pulizia dati";
+        $time =str_replace("/Date(","",$time);
+        $time =str_replace("000+0200)/","",$time);
+    //    $time =str_replace("T"," ",$time);
+    //    $time =str_replace("Z"," ",$time);
+        $time =str_replace(" ","",$time);
+        $time =str_replace("\n","",$time);
+        $timef=floatval($time);
+        $timeff = time();
+        $timec =gmdate('H:i:s d-m-Y', $timef+$ms);
+
+      //  echo "\n<br>timestamp:".$timef."con pulizia dati";
+
+    //    $date = date_create();
+      //echo date_format($date, 'U = Y-m-d H:i:s') . "\n";
+
+    //  date_timestamp_set($date, $time);
+    //  $orario=date_format($date, 'U = Y-m-d H:i:s') . "\n";
+        $temp_c1 .="\n<br><strong>Linea: ".$parsed_json1->{'PrevisioniLinee'}[$f]->{'IdLinea'}." arrivo: ".$timec."</strong>";
+    //    $temp_c1 .=" ".$time;
+       }
+        $temp_c1 .="\n\n<br><br>";
+
+
+      // fine sub routine
+
+  }
+
+   return $temp_c1;
+
+  }
+
+  public function get_lineeba()
+  {
+
+
+      $json_string = file_get_contents("http://bari.opendata.planetek.it/OrariBus/v2.1/OpenDataService.svc/REST/rete/Linee");
+      $parsed_json = json_decode($json_string);
+      $count = 0;
+      $countl = [];
+      foreach($parsed_json as $data=>$csv1){
+         $count = $count+1;
+      }
+  //    $count=1;
+    $IdLinea="";
+    //  echo $count;
+  for ($i=0;$i<$count;$i++){
+    foreach($parsed_json[$i]->{'Id Linea'} as $data=>$csv1){
+       $countl[$i] = $countl[$i]+1;
+      }
+  $temp_c1 .="Percorso: ".$parsed_json[$i]->{'DescrizioneLinea'}."\n<br>Id Linea: ".$parsed_json[$i]->{'IdLinea'};
+  $temp_c1 .="\n\n<br><br>";
+
+
+  $IdLinea=$parsed_json[$i]->{'IdLinea'};
+  $json_string1 = file_get_contents("http://bari.opendata.planetek.it/OrariBus/v2.1/OpenDataService.svc/REST/rete/FermateLinea/".$IdLinea);
+  $parsed_json1 = json_decode($json_string1);
+  for ($f=0;$f<$countl;$f++){
+  $temp_c1 .="Direzione: ".$parsed_json1[$f]->{'Direzione'}."\n<br>Id Fermata: ".$parsed_json1[$f]->{'IdFermata'};
+}
+}
+   return $temp_c1;
+
+  }
+
+  public function get_parcheggi()
+  {
+
+
+      $json_string = file_get_contents("http://bari.opendata.planetek.it/parcheggi/1.0/Parcheggi.svc/REST/parcheggi");
+      $parsed_json = json_decode($json_string);
+      $count = 0;
+    	foreach($parsed_json as $data=>$csv1){
+    	   $count = $count+1;
+    	}
+    //  echo $count;
+for ($i=0;$i<=1;$i++){
+      $temp_c1 .= "Nome parcheggio: ".$parsed_json[$i]->{'NomeParcheggio'}.",\nPosti liberi: ".$parsed_json[$i]->{'DatiVariabili'}->{'NumPostiLiberi'};
+    //  var_dump($parsed_json);
+$temp_c1 .="\n<br>";
+/*
+      $time=$parsed_json[$i]->{'DatiVariabili'}->{'OraRicezioneAggiornamento'}; //registro nel DB anche il tempo unix
+      $time=str_replace("/Date(","",$time);
+      $time=str_replace("+0200)/","",$time);
+
+      $timec=gmdate("d-m-Y\TH:i:s\Z", $time+($ms));
+      $timec=str_replace("T"," ",$timec);
+      $timec=str_replace("Z"," ",$timec);
+      */
+      $lat.="\n".$parsed_json[$i]->{'PosizioneGeografica'}->{'Latitudine'}; //registro nel DB anche il tempo unix
+      $lon.=$parsed_json[$i]->{'PosizioneGeografica'}->{'Longitudine'}; //registro nel DB anche il tempo unix
+      $lat =str_replace(",",".",$lat);
+      $lon =str_replace(",",".",$lon);
+      $coordinate=$lat.",".$lon;
+//      $temp_c4 = "\n".$parsed_json->{'forecast'}->{'txt_forecast'}->{'forecastday'}[3]->{'title'}.", ".$parsed_json->{'forecast'}->{'txt_forecast'}->{'forecastday'}[3]->{'fcttext_metric'};
+//      $temp_c5 = "\n".$parsed_json->{'forecast'}->{'txt_forecast'}->{'forecastday'}[4]->{'title'}.", ".$parsed_json->{'forecast'}->{'txt_forecast'}->{'forecastday'}[4]->{'fcttext_metric'};
+//      $temp_c6 = "\n".$parsed_json->{'forecast'}->{'txt_forecast'}->{'forecastday'}[5]->{'title'}.", ".$parsed_json->{'forecast'}->{'txt_forecast'}->{'forecastday'}[5]->{'fcttext_metric'};
+
+}
+   return $temp_c1.$coordinate;
+
+  }
 
 	//monitoraggio temperatura
 	public function get_forecast($where)
@@ -86,11 +241,20 @@ $html=utf8_decode($html);
 	public function get_sosta($lat,$lon)
 	{
 
+
+
   //  $lat=40.3550;
   //  $lon=18.1816;
-$url='/usr/www/piersoft/sostalecce/index.php?lat='.$lat.'&lon='.$lon;
+$url='/usr/www/piersoft/sostalecce/index.php '.$lat.' '.$lon;
 
-    exec ('/usr/local/bin/php -f '.$url);
+//exec ('/usr/bin/php -f /usr/www/piersoft/sostalecce/index.php?lat=40.355&lon=18.1816');
+
+//exec ('/usr/bin/php -f '.$url);
+//$url1="http://www.piersoft.it/sostalecce/index.php?lat=".$lat."&lon=".$lon;
+//header("location: ".$url1);
+
+echo ($lat." ".$lon."\n");
+     $content = '';
 
     if ($fp = fopen("/usr/www/piersoft/sostalecce/testo.txt", "r")) {
        $content = '';
@@ -109,7 +273,10 @@ $url='/usr/www/piersoft/sostalecce/index.php?lat='.$lat.'&lon='.$lon;
 
     }
 
-    public function get_events()
+
+
+
+public function get_events()
     {
 
 	$eventi="";
@@ -149,8 +316,39 @@ $url='/usr/www/piersoft/sostalecce/index.php?lat='.$lat.'&lon='.$lon;
 	$eventi .="Pagamento: ".$csv[$i][9]."\n";
 	$eventi .="Inizio: ".$csv[$i][7]."\n";
 	$eventi .="Fine: ".$csv[$i][8]."\n";
-	if ($csv[$i][18] !="") $eventi .="Puoi visualizzarlo su :\nhttp://www.openstreetmap.org/?mlat=".$csv[$i][18]."&mlon=".$csv[$i][19]."#map=19/".$csv[$i][18]."/".$csv[$i][19];
-	$eventi .="\n";
+	if (strpos($csv[$i][18],'.') !== false) {
+
+    $longUrl = "http://www.openstreetmap.org/?mlat=".$csv[$i][18]."&mlon=".$csv[$i][19]."#map=19/".$csv[$i][18]."/".$csv[$i][19];
+
+    $apiKey = API;
+
+    $postData = array('longUrl' => $longUrl, 'key' => $apiKey);
+    $jsonData = json_encode($postData);
+
+    $curlObj = curl_init();
+
+    curl_setopt($curlObj, CURLOPT_URL, 'https://www.googleapis.com/urlshortener/v1/url?key='.$apiKey);
+    curl_setopt($curlObj, CURLOPT_RETURNTRANSFER, 1);
+    curl_setopt($curlObj, CURLOPT_SSL_VERIFYPEER, 0);
+    curl_setopt($curlObj, CURLOPT_HEADER, 0);
+    curl_setopt($curlObj, CURLOPT_HTTPHEADER, array('Content-type:application/json'));
+    curl_setopt($curlObj, CURLOPT_POST, 1);
+    curl_setopt($curlObj, CURLOPT_POSTFIELDS, $jsonData);
+
+    $response = curl_exec($curlObj);
+
+    // Change the response json string to object
+    $json = json_decode($response);
+
+    curl_close($curlObj);
+    //  $reply="Puoi visualizzarlo su :\n".$json->id;
+    $shortLink = get_object_vars($json);
+    //return $json->id;
+    $eventi .="Per visualizzarlo su mappa:\n".$shortLink['id'];
+
+}
+
+  $eventi .="\n";
 	}
 	}
 
@@ -197,7 +395,38 @@ $eventi .="\n";
 	$homepage .=$csv[$i][3]."\n";
 //	$homepage = $csv[$i][4]." ".$csv[$i][5]." ".$csv[$i][6]."\n";
 //	$homepage = "Descrizione: ".utf8_encode($csv[$i][5])."\n";
-	$homepage .="Puoi visualizzarlo su :\nhttp://www.openstreetmap.org/?mlat=".$csv[$i][1]."&mlon=".$csv[$i][2]."#map=19/".$csv[$i][0]."/".$csv[$i][1];
+
+$longUrl = "http://www.openstreetmap.org/?mlat=".$csv[$i][1]."&mlon=".$csv[$i][2]."#map=19/".$csv[$i][0]."/".$csv[$i][1];
+
+$apiKey = API;
+
+$postData = array('longUrl' => $longUrl, 'key' => $apiKey);
+$jsonData = json_encode($postData);
+
+$curlObj = curl_init();
+
+curl_setopt($curlObj, CURLOPT_URL, 'https://www.googleapis.com/urlshortener/v1/url?key='.$apiKey);
+curl_setopt($curlObj, CURLOPT_RETURNTRANSFER, 1);
+curl_setopt($curlObj, CURLOPT_SSL_VERIFYPEER, 0);
+curl_setopt($curlObj, CURLOPT_HEADER, 0);
+curl_setopt($curlObj, CURLOPT_HTTPHEADER, array('Content-type:application/json'));
+curl_setopt($curlObj, CURLOPT_POST, 1);
+curl_setopt($curlObj, CURLOPT_POSTFIELDS, $jsonData);
+
+$response = curl_exec($curlObj);
+
+// Change the response json string to object
+$json = json_decode($response);
+
+curl_close($curlObj);
+//  $reply="Puoi visualizzarlo su :\n".$json->id;
+$shortLink = get_object_vars($json);
+//return $json->id;
+
+
+
+
+	$homepage .="Puoi visualizzarlo su: ".$shortLink['id'];
 	$homepage .="\n";
 //	$homepage .="Per vedere tutti i luoghi dove è presente un defribillatore clicca qui: http://u.osmfr.org/m/54531/"
 

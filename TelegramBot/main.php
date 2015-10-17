@@ -5,43 +5,52 @@
   * designed starting from https://github.com/Eleirbag89/TelegramBotPHP
 
  */
-include(dirname(__FILE__).'/../settings.php');
+
+//include(dirname(__FILE__).'/../settings.php');
 include('settings_t.php');
 include(dirname(dirname(__FILE__)).'/getting.php');
 include("Telegram.php");
-include("broadcast.php");
+//include("broadcast.php");
 include("QueryLocation.php");
+$a="";
+$b="";
 
 class main{
+
+const MAX_LENGTH = 4096;
+
 
  function start($telegram,$update)
 	{
 
 		date_default_timezone_set('Europe/Rome');
 		$today = date("Y-m-d H:i:s");
+  //  $api = new GoogleURL('AIzaSyBUMmMuuo4WkImc3IHrch3yMLHu5DeFtPA');
 
 		// Instances the class
 		$data=new getdata();
+  //  $geturl=new getshorturl();
 		$db = new PDO(DB_NAME);
-
+    $log="";
 		/* If you need to manually take some parameters
 		*  $result = $telegram->getData();
 		*  $text = $result["message"] ["text"];
 		*  $chat_id = $result["message"] ["chat"]["id"];
 		*/
-
+    $latgl="";
+    $longl="";
 		$text = $update["message"] ["text"];
 		$chat_id = $update["message"] ["chat"]["id"];
 		$user_id=$update["message"]["from"]["id"];
 		$location=$update["message"]["location"];
 		$reply_to_msg=$update["message"]["reply_to_message"];
 
-		$this->shell($telegram, $db,$data,$text,$chat_id,$user_id,$location,$reply_to_msg);
+		$this->shell($latgl,$longl,$telegram, $db,$data,$text,$chat_id,$user_id,$location,$reply_to_msg);
 $db = NULL;
 	}
 
 	//gestisce l'interfaccia utente
-	 function shell($telegram,$db,$data,$text,$chat_id,$user_id,$location,$reply_to_msg)
+	 function shell($latgl,$longl,$telegram,$db,$data,$text,$chat_id,$user_id,$location,$reply_to_msg)
 	{
 		date_default_timezone_set('Europe/Rome');
 		$today = date("Y-m-d H:i:s");
@@ -75,9 +84,10 @@ $db = NULL;
         //richiede rischi di oggi a Lecce
         elseif ($text == "/defibrillatori" || $text == "defibrillatori") {
         $reply = $data->get_dae();
-        $reply .="\nPer vedere tutti i luoghi dove è presente un defibrillatore clicca qui: http://u.osmfr.org/m/54531/";
 
-        $content = array('chat_id' => $chat_id, 'text' => $reply);
+        $reply .="\nPer vedere tutti i luoghi dove è presente un defibrillatore clicca qui:\nhttp://u.osmfr.org/m/54531/";
+
+        $content = array('chat_id' => $chat_id, 'text' => $reply,'disable_web_page_preview'=>true);
         $telegram->sendMessage($content);
 
           $log=$today. ";dae sent;" .$chat_id. "\n";
@@ -89,7 +99,7 @@ $db = NULL;
   				$this->create_keyboard_temp_orari($telegram,$chat_id);
   				exit;
   			}
-        elseif ($text == "/nido" || $text == "nido") {
+        elseif ($text == "/nido comun." || $text == "nido comun.") {
         $reply = $data->get_orariscuole("nido");
 
         $content = array('chat_id' => $chat_id, 'text' => $reply);
@@ -118,9 +128,17 @@ echo $reply;
         }
         elseif ($text == "/primaria" || $text == "primaria") {
         $reply = $data->get_orariscuole("primaria");
-        echo $reply;
-        $content = array('chat_id' => $chat_id, 'text' => $reply);
-        $telegram->sendMessage($content);
+      //  echo $reply;
+        $chunks = str_split($reply, self::MAX_LENGTH);
+        foreach($chunks as $chunk) {
+         // $forcehide=$telegram->buildForceReply(true);
+            //chiedo cosa sta accadendo nel luogo
+            $content = array('chat_id' => $chat_id, 'text' => $chunk,'disable_web_page_preview'=>true);
+            $telegram->sendMessage($content);
+
+        }
+    //    $content = array('chat_id' => $chat_id, 'text' => $reply);
+    //    $telegram->sendMessage($content);
       //  $telegram->forwardMessage($content);
           $log=$today. ";orari sent;" .$chat_id. "\n";
 
@@ -185,8 +203,16 @@ echo $reply;
         $reply .="\n\nInfo e testi completi su www.lecce-events.it\n";
 
        //$reply .=$data->get_traffico("lecce");
-        $content = array('chat_id' => $chat_id, 'text' => $reply);
-        $telegram->sendMessage($content);
+       $chunks = str_split($reply, self::MAX_LENGTH);
+       foreach($chunks as $chunk) {
+      	// $forcehide=$telegram->buildForceReply(true);
+      		 //chiedo cosa sta accadendo nel luogo
+      		 $content = array('chat_id' => $chat_id, 'text' => $chunk,'disable_web_page_preview'=>true);
+      		 $telegram->sendMessage($content);
+
+       }
+      //  $content = array('chat_id' => $chat_id, 'text' => $reply);
+      //  $telegram->sendMessage($content);
 				$log=$today. ";eventi sent;" .$chat_id."\n";
 			}
 			//crediti
@@ -207,7 +233,7 @@ echo $reply;
           Meteo e temperatura -> Api pubbliche di www.wunderground.com
           ");
 
-				 $content = array('chat_id' => $chat_id, 'text' => $reply);
+				 $content = array('chat_id' => $chat_id, 'text' => $reply,'disable_web_page_preview'=>true);
 				 $telegram->sendMessage($content);
 				 $log=$today. ";crediti sent;" .$chat_id. "\n";
 			}
@@ -275,20 +301,22 @@ echo $reply;
 				$log=$today. ";notification reset;" .$chat_id. "\n";
 			}
 			//----- gestione segnalazioni georiferite : togliere per non gestire le segnalazioni georiferite -----
-			elseif($location!=null)
-			{
+      elseif($location!=null)
+      {
+      //  $reply = "Funzione non ancora implementata";
 
-          $this->location_manager($db,$telegram,$user_id,$chat_id,$location);
+    //    $content = array('chat_id' => $chat_id, 'text' => $reply);
+    //    $telegram->sendMessage($content);
+        $this->location_manager($latgl,$longl,$db,$telegram,$user_id,$chat_id,$location);
           exit;
 
-			}
+      }
 
 			elseif($reply_to_msg!=null)
 			{
 				//inserisce la segnalazione nel DB delle segnalazioni georiferite
 
         $response=$telegram->getData();
-
 
 
     $type=$response["message"]["video"]["file_id"];
@@ -334,8 +362,11 @@ echo $reply;
     $risposta="ID dell'allegato:".$file_id;
 
     }
-    $csv_path=dirname(__FILE__).'/./map_data.csv';
-    $db_path=dirname(__FILE__).'/./lecceod.sqlite';
+
+
+  $csv_path=dirname(__FILE__).'/./map_data.csv';
+  $db_path=dirname(__FILE__).'/./db/lecceod.sqlite';
+
     $username=$response["message"]["from"]["username"];
     $first_name=$response["message"]["from"]["first_name"];
 
@@ -344,6 +375,11 @@ echo $reply;
     $result=	$db1->query($q);
     $row = array();
     $i=0;
+
+
+
+  //  $content = array('chat_id' => $chat_id, 'text' => $row[0]);
+  //  $telegram->sendMessage($content);
 
     while($res = $result->fetchArray(SQLITE3_ASSOC)){
 
@@ -358,18 +394,19 @@ echo $reply;
     			$statement = "UPDATE ".DB_TABLE_GEO ." SET text='".$text."',file_id='". $file_id ."',filename='". $file_name ."',first_name='". $first_name ."',file_path='". $file_path ."',username='". $username ."' WHERE bot_request_message ='".$reply_to_msg['message_id']."'";
     			print_r($reply_to_msg['message_id']);
     			$db->exec($statement);
-    	//		$this->create_keyboard_temp($telegram,$chat_id);
 
-    if ($text=="benzine" || $text=="farmacie" || $text=="musei" || $text=="fermate" || $text=="sosta")
+    if ($text=="location" || $text=="benzine" || $text=="farmacie" || $text=="musei" || $text=="fermate" || $text=="sosta")
     {
       $around=AROUND;
     	$tag="amenity=pharmacy";
 
     if ($text=="sosta") {
-            $lon=$row[0]['lng'];
-            $lat=$row[0]['lat'];
-            $reply =$data->get_sosta($lat,$lon);
-            $reply .="\nClicca sulla mappa: http://www.piersoft.it/sostalecce/?lat=".$lat."&lon=".$lon;
+          $lon=$row[0]['lng'];
+          $lat=$row[0]['lat'];
+
+        //   $reply =$data->get_sosta($lat,$lon);
+
+            $reply .="\nClicca qui per la risposta: http://dati.comune.lecce.it/bot/sosta/sosta.php?lat=".$lat."&lon=".$lon;
 
             $content = array('chat_id' => $chat_id, 'text' => $reply);
             $telegram->sendMessage($content);
@@ -377,6 +414,21 @@ echo $reply;
               $log=$today. ";sosta sent;" .$chat_id. "\n";
               exit;
           }
+          if ($text=="location") {
+                 $lon=$row[0]['lng'];
+                $lat=$row[0]['lat'];
+
+
+              //   $reply =$data->get_sosta($lat,$lon);
+
+                  $reply .="\nlat=".$lat." lon=".$lon;
+
+                  $content = array('chat_id' => $chat_id, 'text' => $reply);
+                  $telegram->sendMessage($content);
+
+
+                    exit;
+                }
     if ($text=="musei") $tag="tourism=museum";
     if ($text=="benzine") $tag="amenity=fuel";
     if ($text=="fermate") {
@@ -425,11 +477,50 @@ echo $reply;
     							//	$content = array('chat_id' => $chat_id, 'text' =>$nome);
     							//	$telegram->sendMessage($content);
     						}
+                $nome=utf8_decode($nome);
     						$content = array('chat_id' => $chat_id, 'text' =>$nome);
     						$telegram->sendMessage($content);
-    						$reply = "Puoi visualizzarlo su :\nhttp://www.openstreetmap.org/?mlat=".$osm_element['lat']."&mlon=".$osm_element['lon']."#map=19/".$osm_element['lat']."/".$osm_element['lon'];
-    						$content = array('chat_id' => $chat_id, 'text' => $reply);
-    						$telegram->sendMessage($content);
+
+
+  $longUrl = "http://www.openstreetmap.org/?mlat=".$osm_element['lat']."&mlon=".$osm_element['lon']."#map=19/".$osm_element['lat']."/".$osm_element['lon']."/".$_POST['qrname'];
+
+  $apiKey = API;
+
+  $postData = array('longUrl' => $longUrl, 'key' => $apiKey);
+  $jsonData = json_encode($postData);
+
+  $curlObj = curl_init();
+
+  curl_setopt($curlObj, CURLOPT_URL, 'https://www.googleapis.com/urlshortener/v1/url?key='.$apiKey);
+  curl_setopt($curlObj, CURLOPT_RETURNTRANSFER, 1);
+  curl_setopt($curlObj, CURLOPT_SSL_VERIFYPEER, 0);
+  curl_setopt($curlObj, CURLOPT_HEADER, 0);
+  curl_setopt($curlObj, CURLOPT_HTTPHEADER, array('Content-type:application/json'));
+  curl_setopt($curlObj, CURLOPT_POST, 1);
+  curl_setopt($curlObj, CURLOPT_POSTFIELDS, $jsonData);
+
+  $response = curl_exec($curlObj);
+
+  // Change the response json string to object
+  $json = json_decode($response);
+
+  curl_close($curlObj);
+//  $reply="Puoi visualizzarlo su :\n".$json->id;
+  $shortLink = get_object_vars($json);
+//return $json->id;
+
+  $reply="Puoi visualizzarlo su :\n".$shortLink['id'];
+
+                $chunks = str_split($reply, self::MAX_LENGTH);
+                foreach($chunks as $chunk) {
+                 // $forcehide=$telegram->buildForceReply(true);
+                    //chiedo cosa sta accadendo nel luogo
+                    $content = array('chat_id' => $chat_id, 'text' => $chunk,'disable_web_page_preview'=>true);
+                    $telegram->sendMessage($content);
+
+                }
+            //		$content = array('chat_id' => $chat_id, 'text' => $reply);
+    				//		$telegram->sendMessage($content);
     					 }
 
     					//crediti dei dati
@@ -442,15 +533,51 @@ echo $reply;
     						$content = array('chat_id' => $chat_id, 'text' => utf8_encode("Non ci sono sono luoghi vicini, mi spiace! Se ne conosci uno nelle vicinanze mappalo su www.openstreetmap.org"));
     						$bot_request_message=$telegram->sendMessage($content);
     					}
-    }else{
+    }
+
+
+   else{
 
 
     			$reply = "La segnalazione è stata Registrata.\n".$risposta."\nGrazie! ";
+
           // creare una mappa su umap, mettere nel layer -> dati remoti -> il link al file map_data.csv
-    			$reply .= "Puoi visualizzarla su :\nhttp://umap.openstreetmap.fr/it/map/segnalazioni-con-opendataleccebot-x-interni_54105#19/".$row[0]['lat']."/".$row[0]['lng'];
+    			$longUrl= "http://umap.openstreetmap.fr/it/map/segnalazioni-con-opendataleccebot-x-interni_54105#19/".$row[0]['lat']."/".$row[0]['lng']."/".$_POST['qrname'];
+          $apiKey = API;
+
+          $postData = array('longUrl' => $longUrl, 'key' => $apiKey);
+          $jsonData = json_encode($postData);
+
+          $curlObj = curl_init();
+
+          curl_setopt($curlObj, CURLOPT_URL, 'https://www.googleapis.com/urlshortener/v1/url?key='.$apiKey);
+          curl_setopt($curlObj, CURLOPT_RETURNTRANSFER, 1);
+          curl_setopt($curlObj, CURLOPT_SSL_VERIFYPEER, 0);
+          curl_setopt($curlObj, CURLOPT_HEADER, 0);
+          curl_setopt($curlObj, CURLOPT_HTTPHEADER, array('Content-type:application/json'));
+          curl_setopt($curlObj, CURLOPT_POST, 1);
+          curl_setopt($curlObj, CURLOPT_POSTFIELDS, $jsonData);
+
+          $response = curl_exec($curlObj);
+
+          // Change the response json string to object
+          $json = json_decode($response);
+
+          curl_close($curlObj);
+        //  $reply="Puoi visualizzarlo su :\n".$json->id;
+          $shortLink = get_object_vars($json);
+        //return $json->id;
+
+          $reply .="Puoi visualizzarlo su :\n".$shortLink['id'];
+
+
+
+
     			$content = array('chat_id' => $chat_id, 'text' => $reply);
     			$telegram->sendMessage($content);
     			$log=$today. ";information for maps recorded;" .$chat_id. "\n";
+          $csv_path=dirname(__FILE__).'/./map_data.csv';
+          $db_path=dirname(__FILE__).'/./lecceod.sqlite';
 
     			exec(' sqlite3 -header -csv '.$db_path.' "select * from segnalazioni;" > '.$csv_path. ' ');
     }
@@ -503,7 +630,7 @@ echo $reply;
     //crea la tastiera per scegliere tipo di scuola
   	 function create_keyboard_temp_orari($telegram, $chat_id)
   		{
-  				$option = array(["inf.statale","inf.comun.","inf.paritaria"],["primaria","primaria paritaria"],["secondaria primogrado"]);
+  				$option = array(["nido comun.","inf.comun."],["inf.statale","inf.paritaria"],["primaria","primaria paritaria"],["secondaria primogrado"]);
   				$keyb = $telegram->buildKeyBoard($option, $onetime=false);
   				$content = array('chat_id' => $chat_id, 'reply_markup' => $keyb, 'text' => "[Seleziona la tipologia di scuola. Aggiornamento risposte ogni minuto]");
   				$telegram->sendMessage($content);
@@ -528,13 +655,16 @@ echo $reply;
 
 
 
-  function location_manager($db,$telegram,$user_id,$chat_id,$location)
+  function location_manager($latgl,$longl,$db,$telegram,$user_id,$chat_id,$location)
   	{
-  			$lng=$location["longitude"];
+
+
+  			$lon=$location["longitude"];
   			$lat=$location["latitude"];
 
-  			//rispondo
+      	//rispondo
   			$response=$telegram->getData();
+
   			$bot_request_message_id=$response["message"]["message_id"];
   			$time=$response["message"]["date"]; //registro nel DB anche il tempo unix
 
@@ -551,9 +681,10 @@ echo $reply;
   			//chiedo cosa sta accadendo nel luogo
 //  		$content = array('chat_id' => $chat_id, 'text' => "[Scrivici cosa sta accadendo qui]", 'reply_markup' =>$forcehide, 'reply_to_message_id' =>$bot_request_message_id);
 
-      $content = array('chat_id' => $chat_id, 'text' => "[Cosa vuole comunicarci su questo posto? oppure scriva:\n\nfarmacie o musei o benzine o sosta \n(tutto minuscolo).\n\nLe indicheremo quelli più vicini nell'arco di 5km]", 'reply_markup' =>$forcehide, 'reply_to_message_id' =>$bot_request_message_id);
+        $content = array('chat_id' => $chat_id, 'text' => "[Cosa vuole comunicarci su questo posto? oppure scriva:\n\nfarmacie o musei o benzine o sosta \n(tutto minuscolo).\n\nLe indicheremo quelli più vicini nell'arco di 5km] ".$a.$b, 'reply_markup' =>$forcehide, 'reply_to_message_id' =>$bot_request_message_id);
 
         $bot_request_message=$telegram->sendMessage($content);
+
 
   			//memorizzare nel DB
   			$obj=json_decode($bot_request_message);
@@ -561,9 +692,11 @@ echo $reply;
   			$id=$id->message_id;
 
   			//print_r($id);
-  			$statement = "INSERT INTO ". DB_TABLE_GEO. " (lat,lng,user,username,text,bot_request_message,time,file_id,file_path,filename,first_name) VALUES ('" . $lat . "','" . $lng . "','" . $user_id . "',' ',' ','". $id ."','". $timec ."',' ',' ',' ',' ')";
-  						$db->exec($statement);
-  	}
+    		$statement = "INSERT INTO ". DB_TABLE_GEO. " (lat,lng,user,username,text,bot_request_message,time,file_id,file_path,filename,first_name) VALUES ('" . $lat . "','" . $lon . "','" . $user_id . "',' ',' ','". $id ."','". $timec ."',' ',' ',' ',' ')";
+        $db->query($statement);
+
+
+        }
 
 
   }
