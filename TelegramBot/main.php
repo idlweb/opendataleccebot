@@ -73,9 +73,9 @@ $db = NULL;
 
   			}
         //richiede rischi di oggi a Lecce
-        elseif ($text == "/defribillatori" || $text == "defribillatori") {
+        elseif ($text == "/defibrillatori" || $text == "defibrillatori") {
         $reply = $data->get_dae();
-        $reply .="\nPer vedere tutti i luoghi dove è presente un defribillatore clicca qui: http://u.osmfr.org/m/54531/";
+        $reply .="\nPer vedere tutti i luoghi dove è presente un defibrillatore clicca qui: http://u.osmfr.org/m/54531/";
 
         $content = array('chat_id' => $chat_id, 'text' => $reply);
         $telegram->sendMessage($content);
@@ -200,7 +200,7 @@ echo $reply;
           Bollettini rischi   -> Protezione Civile di Lecce su dati.comune.lecce.it tramite il programma InfoAlert365
           Eventi culturali    -> piattaforma dati.comune.lecce.it fonte Lecce Events
           Qualtà dell'Aria    -> piattaforma dati.comune.lecce.it
-          Defribillatori DAE  -> piattaforma dati.comune.lecce.it
+          defibrillatori DAE  -> piattaforma dati.comune.lecce.it
           Farmacie            -> piattaforma dati.comune.lecce.it
           Benzinai            -> piattaforma openstreemap Lic. odBL
           Musei               -> piattaforma openstreemap Lic. odBL
@@ -368,13 +368,14 @@ echo $reply;
     if ($text=="sosta") {
             $lon=$row[0]['lng'];
             $lat=$row[0]['lat'];
-            $reply ="Clicca sulla mappa: http://www.piersoft.it/ztl/?lat=".$lat."&lon=".$lon;
+            $reply =$data->get_sosta($lat,$lon);
+            $reply .="\nClicca sulla mappa: http://www.piersoft.it/sostalecce/?lat=".$lat."&lon=".$lon;
 
             $content = array('chat_id' => $chat_id, 'text' => $reply);
             $telegram->sendMessage($content);
 
-              $log=$today. ";tariffa_antegps sent;" .$chat_id. "\n";
-exit;
+              $log=$today. ";sosta sent;" .$chat_id. "\n";
+              exit;
           }
     if ($text=="musei") $tag="tourism=museum";
     if ($text=="benzine") $tag="amenity=fuel";
@@ -485,7 +486,7 @@ exit;
 	// Crea la tastiera
 	 function create_keyboard($telegram, $chat_id)
 		{
-				$option = array(["meteo oggi","previsioni"],["bollettini rischi","temperatura"],["eventi culturali","qualità aria"],["defribillatori","orari scuole"],["tariffasosta","traffico"],["informazioni"]);
+				$option = array(["meteo oggi","previsioni"],["bollettini rischi","temperatura"],["eventi culturali","qualità aria"],["defibrillatori","orari scuole"],["tariffasosta","traffico"],["informazioni"]);
 				$keyb = $telegram->buildKeyBoard($option, $onetime=false);
 				$content = array('chat_id' => $chat_id, 'reply_markup' => $keyb, 'text' => "[seleziona un'etichetta oppure clicca sulla graffetta \xF0\x9F\x93\x8E e poi 'posizione'. Aggiornamento risposte ogni minuto]");
 				$telegram->sendMessage($content);

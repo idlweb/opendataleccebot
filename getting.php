@@ -83,9 +83,34 @@ $html=utf8_decode($html);
 	}
 
 
-	public function get_events()
+	public function get_sosta($lat,$lon)
 	{
 
+  //  $lat=40.3550;
+  //  $lon=18.1816;
+$url='/usr/www/piersoft/sostalecce/index.php?lat='.$lat.'&lon='.$lon;
+
+    exec ('/usr/local/bin/php -f '.$url);
+
+    if ($fp = fopen("/usr/www/piersoft/sostalecce/testo.txt", "r")) {
+       $content = '';
+       // keep reading until there's nothing left
+       while ($line = fread($fp, 1024)) {
+          $content .= $line;
+       }
+  //  echo $content;
+
+    } else {
+      echo "errore";
+
+    }
+
+    return $content;
+
+    }
+
+    public function get_events()
+    {
 
 	$eventi="";
 
