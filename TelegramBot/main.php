@@ -194,7 +194,12 @@ echo $reply;
       $reply = "Segnalazione Demo/Test non reale".$data->get_traffico("lecce");
       $content = array('chat_id' => $chat_id, 'text' => $reply);
       $telegram->sendMessage($content);
-				$log=$today. ";traffico sent;" .$chat_id. "\n";
+			$log=$today. ";traffico sent;" .$chat_id. "\n";
+    }elseif ($text == "/monumenti" || $text == "monumenti") {
+        $reply = "Monumenti che posso essere fotografati e inseriti nel progetto Wikilovesmonuments".$data->get_monumenti("lecce");
+        $content = array('chat_id' => $chat_id, 'text' => $reply,'disable_web_page_preview'=>true);
+        $telegram->sendMessage($content);
+  				$log=$today. ";monumenti sent;" .$chat_id. "\n";
 
 			}elseif ($text == "/eventi culturali" || $text == "eventi culturali") {
         $reply = "Eventi culturali in programmazione:\n";
@@ -228,6 +233,7 @@ echo $reply;
           Qualtà dell'Aria    -> piattaforma dati.comune.lecce.it
           defibrillatori DAE  -> piattaforma dati.comune.lecce.it
           Farmacie            -> piattaforma dati.comune.lecce.it
+          Monumenti           -> piattaforma dati.comune.lecce.it
           Benzinai            -> piattaforma openstreemap Lic. odBL
           Musei               -> piattaforma openstreemap Lic. odBL
           Meteo e temperatura -> Api pubbliche di www.wunderground.com
@@ -613,9 +619,9 @@ echo $reply;
 	// Crea la tastiera
 	 function create_keyboard($telegram, $chat_id)
 		{
-				$option = array(["meteo oggi","previsioni"],["bollettini rischi","temperatura"],["eventi culturali","qualità aria"],["defibrillatori","orari scuole"],["tariffasosta","traffico"],["informazioni"]);
+				$option = array(["meteo oggi","previsioni"],["bollettini rischi","temperatura"],["eventi culturali","qualità aria"],["defibrillatori","orari scuole"],["tariffasosta","monumenti"],["traffico","informazioni"]);
 				$keyb = $telegram->buildKeyBoard($option, $onetime=false);
-				$content = array('chat_id' => $chat_id, 'reply_markup' => $keyb, 'text' => "[seleziona un'etichetta oppure clicca sulla graffetta \xF0\x9F\x93\x8E e poi 'posizione'. Aggiornamento risposte ogni minuto]");
+				$content = array('chat_id' => $chat_id, 'reply_markup' => $keyb, 'text' => "[seleziona un'etichetta oppure clicca sulla graffetta \xF0\x9F\x93\x8E e poi 'posizione'. ]");
 				$telegram->sendMessage($content);
 		}
 
@@ -624,7 +630,7 @@ echo $reply;
 		{
 				$option = array(["Lecce","Lequile"],["Nardò", "Galatina"]);
 				$keyb = $telegram->buildKeyBoard($option, $onetime=false);
-				$content = array('chat_id' => $chat_id, 'reply_markup' => $keyb, 'text' => "[Seleziona la località. Aggiornamento risposte ogni minuto]");
+				$content = array('chat_id' => $chat_id, 'reply_markup' => $keyb, 'text' => "[Seleziona la località. ]");
 				$telegram->sendMessage($content);
 		}
     //crea la tastiera per scegliere tipo di scuola
@@ -632,7 +638,7 @@ echo $reply;
   		{
   				$option = array(["nido comun.","inf.comun."],["inf.statale","inf.paritaria"],["primaria","primaria paritaria"],["secondaria primogrado"]);
   				$keyb = $telegram->buildKeyBoard($option, $onetime=false);
-  				$content = array('chat_id' => $chat_id, 'reply_markup' => $keyb, 'text' => "[Seleziona la tipologia di scuola. Aggiornamento risposte ogni minuto]");
+  				$content = array('chat_id' => $chat_id, 'reply_markup' => $keyb, 'text' => "[Seleziona la tipologia di scuola. ]");
   				$telegram->sendMessage($content);
   		}
     //crea la tastiera per farmacie
@@ -640,7 +646,7 @@ echo $reply;
       {
           $option = array(["farmacie","benzine"],["musei"]);
           $keyb = $telegram->buildKeyBoard($option, $onetime=false);
-          $content = array('chat_id' => $chat_id, 'reply_markup' => $keyb, 'text' => "[Seleziona il luogo di interesse. Aggiornamento risposte ogni minuto]");
+          $content = array('chat_id' => $chat_id, 'reply_markup' => $keyb, 'text' => "[Seleziona il luogo di interesse. ]");
           $telegram->sendMessage($content);
       }
 	//controlla le condizioni per gestire le notifiche automatiche
@@ -668,7 +674,7 @@ echo $reply;
   			$bot_request_message_id=$response["message"]["message_id"];
   			$time=$response["message"]["date"]; //registro nel DB anche il tempo unix
 
-  			$h = "2";// Hour for time zone goes here e.g. +7 or -4, just remove the + or -
+  			$h = "1";// Hour for time zone goes here e.g. +7 or -4, just remove the + or -
   			$hm = $h * 60;
   			$ms = $hm * 60;
   			$timec=gmdate("Y-m-d\TH:i:s\Z", $time+($ms));

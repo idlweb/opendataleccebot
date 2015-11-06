@@ -1,4 +1,4 @@
- <?php
+  <?php
 
 include(dirname(__FILE__).'/../settings_t.php');
 
@@ -814,6 +814,55 @@ $homepage .="Indir.: ".$csv[$i][4]."\n";
 
 	}
 
+  public function get_monumenti($where)
+  {
+
+    $csv = array_map('str_getcsv', file("https://goo.gl/ZoQo3S"));
+    //	$i=1;
+
+    $count = 0;
+    foreach($csv as $data=>$csv1){
+       $count = $count+1;
+    }
+    //var_dump($csv);
+
+    for ($i=1;$i<$count;$i++){
+      $homepage .="\n";
+      $homepage .="\nNome: ".$csv[$i][0]."\n";
+      $homepage .="Indirizzo: ".$csv[$i][1]."\n";
+      if ($csv[$i][4] != NULL) $homepage .="Wikipedia: ".$csv[$i][4]."\n";
+      $longUrl = "http://www.openstreetmap.org/?mlat=".$csv[$i][2]."&mlon=".$csv[$i][3]."#map=19/".$csv[$i][2]."/".$csv[$i][3];
+
+       $apiKey = API;
+
+       $postData = array('longUrl' => $longUrl, 'key' => $apiKey);
+       $jsonData = json_encode($postData);
+
+       $curlObj = curl_init();
+
+       curl_setopt($curlObj, CURLOPT_URL, 'https://www.googleapis.com/urlshortener/v1/url?key='.$apiKey);
+       curl_setopt($curlObj, CURLOPT_RETURNTRANSFER, 1);
+       curl_setopt($curlObj, CURLOPT_SSL_VERIFYPEER, 0);
+       curl_setopt($curlObj, CURLOPT_HEADER, 0);
+       curl_setopt($curlObj, CURLOPT_HTTPHEADER, array('Content-type:application/json'));
+       curl_setopt($curlObj, CURLOPT_POST, 1);
+       curl_setopt($curlObj, CURLOPT_POSTFIELDS, $jsonData);
+
+       $response = curl_exec($curlObj);
+
+       // Change the response json string to object
+       $json = json_decode($response);
+
+       curl_close($curlObj);
+       //  $reply="Puoi visualizzarlo su :\n".$json->id;
+       $shortLink = get_object_vars($json);
+       //return $json->id;
+       $homepage  .="Per visualizzarlo su mappa:".$shortLink['id']."\n";
+
+    //   echo $homepage.$homepage1;
+    }
+return $homepage;
+}
 
 //monitoraggio temperatura
 public function get_temperature($where)
