@@ -393,7 +393,7 @@ $eventi .="\n";
 
 	$homepage .="\n";
 	$homepage .=$csv[$i][3]."\n";
-//	$homepage = $csv[$i][4]." ".$csv[$i][5]." ".$csv[$i][6]."\n";
+	$homepage .= $csv[$i][4]." ".$csv[$i][5]." ".$csv[$i][6]."\n";
 //	$homepage = "Descrizione: ".utf8_encode($csv[$i][5])."\n";
 
 $longUrl = "http://www.openstreetmap.org/?mlat=".$csv[$i][1]."&mlon=".$csv[$i][2]."#map=19/".$csv[$i][0]."/".$csv[$i][1];
@@ -432,7 +432,7 @@ $shortLink = get_object_vars($json);
 
 	}
 
-	if (empty($csv[1][0])) $homepage="Errore generico, ti preghiamo di selezionare nuovamente qualità aria";
+	if (empty($csv[1][0])) $homepage="Errore generico, ti preghiamo di selezionare nuovamente il comando";
 
 
 	 echo $homepage;
@@ -763,7 +763,7 @@ $homepage .="Indir.: ".$csv[$i][4]."\n";
 
 	}
 
- if (empty($csv[2][0])) $homepage="Errore generico, ti preghiamo di selezionare nuovamente qualità aria";
+ if (empty($csv[2][0])) $homepage="Errore generico, ti preghiamo di selezionare nuovamente il comando";
 
 
 	break;
