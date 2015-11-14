@@ -161,7 +161,7 @@ $temp_c1 .="\n<br>";
 
   }
 
-	//monitoraggio temperatura
+  //monitoraggio temperatura
 	public function get_forecast($where)
 	{
 
@@ -190,6 +190,45 @@ $temp_c1 .="\n<br>";
 	}
 	 return $temp_c1.$temp_c2.$temp_c3.$temp_c4.$temp_c5.$temp_c6;
 
+	}
+
+	//monitoraggio temperatura
+	public function get_spesecorrenti($where)
+	{
+    $where=utf8_decode($where);
+
+    $where=str_replace("?","",$where);
+    $where=str_replace(" ","%20",$where);
+    extract($_POST);
+    $url = 'http://soldipubblici.gov.it/it/ricerca';
+    $ch = curl_init();
+    $file = fopen('db/spese.json', 'w+'); //da decommentare se si vuole il file locale
+    curl_setopt($ch,CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/x-www-form-urlencoded; charset=UTF-8','Accept: Application/json','X-Requested-With: XMLHttpRequest','Content-Type: application/octet-stream','Content-Type: application/download','Content-Type: application/force-download','Content-Transfer-Encoding: binary '));
+    curl_setopt($ch,CURLOPT_POSTFIELDS, 'codicecomparto=PRO&codiceente=000705530&chi=Comune+di+Lecce&cosa='.$where);
+    curl_setopt($ch, CURLOPT_FILE, $file);
+    curl_exec($ch);
+    curl_close($ch);
+
+    $json_string = file_get_contents("db/spese.json");
+    $parsed_json = json_decode($json_string);
+      //var_dump(  $parsed_json); // debug
+    $count = 0;
+    foreach($parsed_json->{'data'} as $data=>$csv1){
+    	   $count = $count+1;
+    	}
+      $temp_c1="";
+    	for ($i=0;$i<$count;$i++){
+      $temp_c1 .="\n\n";
+      $mese=  substr_replace($parsed_json->{'data'}[$i]->{'imp_uscite_att'}, ",", -2, 0);
+      $annoprecedente=substr_replace($parsed_json->{'data'}[$i]->{'importo_2014'}, ",", -2, 0);
+      $annoincorso=substr_replace($parsed_json->{'data'}[$i]->{'importo_2015'}, ",", -2, 0);
+      $temp_c1 .= "Ricerca per: ".$parsed_json->{'data'}[$i]->{'ricerca'}."\nTrovata la voce: ".$parsed_json->{'data'}[$i]->{'descrizione_codice'}."\nCodice Siope: ".$parsed_json->{'data'}[$i]->{'codice_siope'}."\nNel periodo ".$parsed_json->{'data'}[$i]->{'periodo'}."/".$parsed_json->{'data'}[$i]->{'anno'}." spesi: ".$mese."€\nNel 2014 sono stati spesi: ".$annoprecedente."€\nIl progressivo 2015 è ".$annoincorso."€";
+      $temp_c1 .="\n";
+
+    }
+
+	 return $temp_c1;
 	}
 
   //scraping dal sito web della PPC Lecce
@@ -441,6 +480,49 @@ $shortLink = get_object_vars($json);
 
 	}
 
+  public function get_mensa($day,$where,$s)
+	{
+    $homepage="";
+    $url .="https://spreadsheets.google.com/tq?tqx=out:csv&tq=SELECT%20%2A%20WHERE%20B%20LIKE%20%27%25".$day;
+
+$inizio=1;
+if ($where=="Infanzia-Aut_Inverno")           $url .="%25%27%20AND%20A%20LIKE%20%27%25".$s."%25%27&key=1suKIY8FJdmzRsAk0zjyVVqguV4aN8Y5m1r9Jq1Kzxo0";
+elseif ($where=="Infanzia-Primavera")         $url .="%25%27%20AND%20A%20LIKE%20%27%25".$s."%25%27&key=1VT1obAyy-6z0aoBqHoKaFkEf6qB_XZP0L0yqAVYxgNA";
+elseif ($where=="Primaria_Media_Primavera")  {
+  $url .="%25%27%20AND%20A%20LIKE%20%27%25".$s."%25%27&key=1LPEDTnDUmW2gNTtMQGIidBgQojT9pYJ9PZrhz1q-V-Y";
+  $inizio=0;
+} elseif ($where=="Primaria_Media-Aut_Inverno")  {
+  $url .="%25%27%20AND%20A%20LIKE%20%27%25".$s."%25%27&key=1L-da7CSdv92Bcrfxfle76dFw9BxGEZNJYabIBP3uc1I";
+$inizio=0;
+} //  echo $url;
+
+  //  $url="https://docs.google.com/spreadsheets/d/1r-A2a47HKuy7dUx4YreSmJxI4KQ-fc4v97J-xt5qqqU/gviz/tq?tqx=out:csv&tq=SELECT+*+WHERE+B+LIKE+%27%25VENERD%25%27+AND+A+LIKE+%27%251%25%27";
+    $csv = array_map('str_getcsv', file($url));
+
+    $count = 0;
+    foreach($csv as $data=>$csv1){
+      $count = $count+1;
+    }
+  //  echo $count;
+    for ($i=$inizio;$i<$count;$i++){
+
+      $homepage .="\n";
+      $homepage .="Settimana: ".$csv[$i][0]."\n";
+      $homepage .="Giorno: ".$csv[$i][1]."\n";
+      $homepage .="Primo: ".$csv[$i][2]."\n";
+      $homepage .="Secondo: ".$csv[$i][3]."\n";
+      $homepage .="Contorno: ".$csv[$i][4]."\n";
+      $homepage .="Pane grammi: ".$csv[$i][5]."\n";
+      $homepage .="Frutta: ".$csv[$i][6]."\n";
+      $homepage .="\n";
+
+  }
+
+  //  if (empty($csv[1][0])) $homepage="Errore generico, ti preghiamo di selezionare nuovamente gli orari";
+
+   return $homepage;
+
+ }
 
   public function get_orariscuole($where)
 	{
@@ -794,11 +876,11 @@ $homepage .="Indir.: ".$csv[$i][4]."\n";
 	for ($i=1;$i<$count;$i++){
 
 	$homepage .="\n";
-	$homepage .="Tipologia: ".$csv[$i][0]."\n";
-	$homepage .="Descrizione: ".$csv[$i][1]."\n";
-	$homepage .="Data: ".$csv[$i][2]."\n";
-	$homepage .="Luogo: ".$csv[$i][3]."\n";
-	$homepage .="Puoi visualizzarlo su :\nhttp://www.openstreetmap.org/?mlat=".$csv[$i][4]."&mlon=".$csv[$i][5]."#map=19/".$csv[$i][4]."/".$csv[$i][5];
+	$homepage .="Tipologia: ".$csv[$i][1]."\n";
+	$homepage .="Descrizione: ".$csv[$i][2]."\n";
+	$homepage .="Data: ".$csv[$i][3]."\n";
+	$homepage .="Luogo: ".$csv[$i][4]."\n";
+	$homepage .="Puoi visualizzarlo su :\nhttp://www.openstreetmap.org/?mlat=".$csv[$i][5]."&mlon=".$csv[$i][6]."#map=19/".$csv[$i][5]."/".$csv[$i][6];
 
 	//$homepage .="Mappa: http://www.openstreetmap.org/#map=19/".$csv[$i][4]."/".$csv[$i][5];
 	$homepage .="\n";

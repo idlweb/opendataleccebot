@@ -58,6 +58,17 @@ $db = NULL;
 		if ($text == "/start") {
 				$log=$today. ";new chat started;" .$chat_id. "\n";
 			}
+      elseif (strpos($text,'?') !== false) {
+          $text=str_replace("?","",$text);
+          $reply ="Interrogazione del Database di Soldipubblici.gov.it attendere....";
+          $reply .= $data->get_spesecorrenti($text);
+          $chunks = str_split($reply, self::MAX_LENGTH);
+          foreach($chunks as $chunk) {
+              $content = array('chat_id' => $chat_id, 'text' => $chunk,'disable_web_page_preview'=>true);
+              $telegram->sendMessage($content);
+          }
+               $log=$today. ";spese correnti sent;" .$chat_id. "\n";
+        }
 			//richiedi previsioni meteo di oggi
 			elseif ($text == "/meteo oggi" || $text == "meteo oggi") {
         $reply = "Previsioni Meteo per oggi:\n" .$data->get_forecast("Lecceoggi");
@@ -104,7 +115,7 @@ $db = NULL;
 
         $content = array('chat_id' => $chat_id, 'text' => $reply);
         $telegram->sendMessage($content);
-echo $reply;
+        echo $reply;
           $log=$today. ";orari sent;" .$chat_id. "\n";
 
         }
@@ -185,23 +196,275 @@ echo $reply;
       $reply = $data->get_aria("lecce");
       $reply .="\nTabella valori di riferimento e info: http://goo.gl/H1nPxO";
 
-      $content = array('chat_id' => $chat_id, 'text' => $reply);
+      $content = array('chat_id' => $chat_id, 'text' => $reply,'disable_web_page_preview'=>true);
       $telegram->sendMessage($content);
 
 				$log=$today. ";aria sent;" .$chat_id. "\n";
 
 			}elseif ($text == "/traffico" || $text == "traffico") {
       $reply = "Segnalazione Demo/Test non reale".$data->get_traffico("lecce");
-      $content = array('chat_id' => $chat_id, 'text' => $reply);
+      $content = array('chat_id' => $chat_id, 'text' => $reply,'disable_web_page_preview'=>true);
       $telegram->sendMessage($content);
 			$log=$today. ";traffico sent;" .$chat_id. "\n";
     }elseif ($text == "/monumenti" || $text == "monumenti") {
-        $reply = "Monumenti che posso essere fotografati e inseriti nel progetto Wikilovesmonuments".$data->get_monumenti("lecce");
+        $reply = "Monumenti che posso essere fotografati e inseriti nel progetto Wikilovesmonuments\n".$data->get_monumenti("lecce");
         $content = array('chat_id' => $chat_id, 'text' => $reply,'disable_web_page_preview'=>true);
         $telegram->sendMessage($content);
   				$log=$today. ";monumenti sent;" .$chat_id. "\n";
 
-			}elseif ($text == "/eventi culturali" || $text == "eventi culturali") {
+		}elseif ($text == "/mensa scuole" || $text == "mensa scuole") {
+      $log=$today. ";temp requested;" .$chat_id. "\n";
+      $this->create_keyboard_temp_mensa($telegram,$chat_id);
+      exit;
+    }elseif ($text == "/Infanzia-Aut_Inverno" || $text == "Infanzia-Aut_Inverno"){
+      $giorni = array("Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato");
+      $mesi = array("Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre","Novembre", "Dicembre");
+
+      // giorno della settimana in italiano
+      $numero_giorno_settimana = date("w");
+      $nome_giorno = $giorni[$numero_giorno_settimana];
+
+      function datediff($tipo, $partenza, $fine)
+        {
+            switch ($tipo)
+            {
+                case "A" : $tipo = 365;
+                break;
+                case "M" : $tipo = (365 / 12);
+                break;
+                case "S" : $tipo = (365 / 52);
+                break;
+                case "G" : $tipo = 1;
+                break;
+            }
+            $arr_partenza = explode("/", $partenza);
+            $partenza_gg = $arr_partenza[0];
+            $partenza_mm = $arr_partenza[1];
+            $partenza_aa = $arr_partenza[2];
+            $arr_fine = explode("/", $fine);
+            $fine_gg = $arr_fine[0];
+            $fine_mm = $arr_fine[1];
+            $fine_aa = $arr_fine[2];
+            $date_diff = mktime(12, 0, 0, $fine_mm, $fine_gg, $fine_aa) - mktime(12, 0, 0, $partenza_mm, $partenza_gg, $partenza_aa);
+            $date_diff  = floor(($date_diff / 60 / 60 / 24) / $tipo);
+            return $date_diff;
+        }
+        $diff=0;
+        $diff1=-datediff("S", date("d/m/Y"), "05/10/2015");
+
+          if (($diff1-5)<5 && ($diff1-5)>0) {
+          $diff1 =$diff1-5;
+        }elseif (($diff1-5)>0){
+              $diff1 =$diff1-10;
+        }
+        if (($diff1-5)<5 && ($diff1-5)>0) {
+        $diff1 =$diff1-5;
+      }elseif (($diff1-5)>0){
+            $diff1 =$diff1-10;
+      }
+        if (($diff1-5)<5 && ($diff1-5)>0) {
+        $diff1 =$diff1-5;
+        }elseif (($diff1-5)>0){
+          $diff1 =$diff1-10;
+      }
+      if (($diff1-5)<5 && ($diff1-5)>0) {
+      $diff1 =$diff1-5;
+      }elseif (($diff1-5)>0){
+        $diff1 =$diff1-10;
+      }
+      $reply = "Mensa scolastica. Menu :\n".$data->get_mensa(strtoupper(substr($nome_giorno, 0, 4)),"Infanzia-Aut_Inverno",$diff1);
+      $content = array('chat_id' => $chat_id, 'text' => $reply,'disable_web_page_preview'=>true);
+      $telegram->sendMessage($content);
+    	$log=$today. ";mensa scolastica sent;" .$chat_id. "\n";
+
+
+  	}elseif ($text == "/Primaria_Media_Primavera" || $text == "Primaria_Media_Primavera"){
+      $giorni = array("Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato");
+      $mesi = array("Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre","Novembre", "Dicembre");
+
+      // giorno della settimana in italiano
+      $numero_giorno_settimana = date("w");
+      $nome_giorno = $giorni[$numero_giorno_settimana];
+
+            function datediff($tipo, $partenza, $fine)
+              {
+                  switch ($tipo)
+                  {
+                      case "A" : $tipo = 365;
+                      break;
+                      case "M" : $tipo = (365 / 12);
+                      break;
+                      case "S" : $tipo = (365 / 52);
+                      break;
+                      case "G" : $tipo = 1;
+                      break;
+                  }
+                  $arr_partenza = explode("/", $partenza);
+                  $partenza_gg = $arr_partenza[0];
+                  $partenza_mm = $arr_partenza[1];
+                  $partenza_aa = $arr_partenza[2];
+                  $arr_fine = explode("/", $fine);
+                  $fine_gg = $arr_fine[0];
+                  $fine_mm = $arr_fine[1];
+                  $fine_aa = $arr_fine[2];
+                  $date_diff = mktime(12, 0, 0, $fine_mm, $fine_gg, $fine_aa) - mktime(12, 0, 0, $partenza_mm, $partenza_gg, $partenza_aa);
+                  $date_diff  = floor(($date_diff / 60 / 60 / 24) / $tipo);
+                  return $date_diff;
+              }
+              $diff=0;
+              $diff1=-datediff("S", date("d/m/Y"), "05/10/2015");
+
+                if (($diff1-5)<5 && ($diff1-5)>0) {
+                $diff1 =$diff1-5;
+              }elseif (($diff1-5)>0){
+                    $diff1 =$diff1-10;
+              }
+              if (($diff1-5)<5 && ($diff1-5)>0) {
+              $diff1 =$diff1-5;
+            }elseif (($diff1-5)>0){
+                  $diff1 =$diff1-10;
+            }
+              if (($diff1-5)<5 && ($diff1-5)>0) {
+              $diff1 =$diff1-5;
+              }elseif (($diff1-5)>0){
+                $diff1 =$diff1-10;
+            }
+            if (($diff1-5)<5 && ($diff1-5)>0) {
+            $diff1 =$diff1-5;
+            }elseif (($diff1-5)>0){
+              $diff1 =$diff1-10;
+            }
+      $reply = "Mensa scolastica. Menu :\n".$data->get_mensa(strtoupper(substr($nome_giorno, 0, 4)),"Primaria_Media_Primavera",$diff1);
+      $content = array('chat_id' => $chat_id, 'text' => $reply,'disable_web_page_preview'=>true);
+      $telegram->sendMessage($content);
+    	$log=$today. ";mensa scolastica sent;" .$chat_id. "\n";
+
+
+  	}elseif ($text == "/Infanzia-Primavera" || $text == "Infanzia-Primavera"){
+      $giorni = array("Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato");
+      $mesi = array("Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre","Novembre", "Dicembre");
+
+      // giorno della settimana in italiano
+      $numero_giorno_settimana = date("w");
+      $nome_giorno = $giorni[$numero_giorno_settimana];
+
+            function datediff($tipo, $partenza, $fine)
+              {
+                  switch ($tipo)
+                  {
+                      case "A" : $tipo = 365;
+                      break;
+                      case "M" : $tipo = (365 / 12);
+                      break;
+                      case "S" : $tipo = (365 / 52);
+                      break;
+                      case "G" : $tipo = 1;
+                      break;
+                  }
+                  $arr_partenza = explode("/", $partenza);
+                  $partenza_gg = $arr_partenza[0];
+                  $partenza_mm = $arr_partenza[1];
+                  $partenza_aa = $arr_partenza[2];
+                  $arr_fine = explode("/", $fine);
+                  $fine_gg = $arr_fine[0];
+                  $fine_mm = $arr_fine[1];
+                  $fine_aa = $arr_fine[2];
+                  $date_diff = mktime(12, 0, 0, $fine_mm, $fine_gg, $fine_aa) - mktime(12, 0, 0, $partenza_mm, $partenza_gg, $partenza_aa);
+                  $date_diff  = floor(($date_diff / 60 / 60 / 24) / $tipo);
+                  return $date_diff;
+              }
+              $diff=0;
+              $diff1=-datediff("S", date("d/m/Y"), "05/10/2015");
+
+                if (($diff1-5)<5 && ($diff1-5)>0) {
+                $diff1 =$diff1-5;
+              }elseif (($diff1-5)>0){
+                    $diff1 =$diff1-10;
+              }
+              if (($diff1-5)<5 && ($diff1-5)>0) {
+              $diff1 =$diff1-5;
+            }elseif (($diff1-5)>0){
+                  $diff1 =$diff1-10;
+            }
+              if (($diff1-5)<5 && ($diff1-5)>0) {
+              $diff1 =$diff1-5;
+              }elseif (($diff1-5)>0){
+                $diff1 =$diff1-10;
+            }
+            if (($diff1-5)<5 && ($diff1-5)>0) {
+            $diff1 =$diff1-5;
+            }elseif (($diff1-5)>0){
+              $diff1 =$diff1-10;
+            }
+      $reply = "Mensa scolastica. Menu :\n".$data->get_mensa(strtoupper(substr($nome_giorno, 0, 4)),"Infanzia-Primavera",$diff1);
+      $content = array('chat_id' => $chat_id, 'text' => $reply,'disable_web_page_preview'=>true);
+      $telegram->sendMessage($content);
+    	$log=$today. ";mensa scolastica sent;" .$chat_id. "\n";
+
+
+  	}elseif ($text == "/Primaria_Media-Aut_Inverno" || $text == "Primaria_Media-Aut_Inverno"){
+      $giorni = array("Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato");
+      $mesi = array("Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno", "Luglio", "Agosto", "Settembre", "Ottobre","Novembre", "Dicembre");
+
+      // giorno della settimana in italiano
+      $numero_giorno_settimana = date("w");
+      $nome_giorno = $giorni[$numero_giorno_settimana];
+
+            function datediff($tipo, $partenza, $fine)
+              {
+                  switch ($tipo)
+                  {
+                      case "A" : $tipo = 365;
+                      break;
+                      case "M" : $tipo = (365 / 12);
+                      break;
+                      case "S" : $tipo = (365 / 52);
+                      break;
+                      case "G" : $tipo = 1;
+                      break;
+                  }
+                  $arr_partenza = explode("/", $partenza);
+                  $partenza_gg = $arr_partenza[0];
+                  $partenza_mm = $arr_partenza[1];
+                  $partenza_aa = $arr_partenza[2];
+                  $arr_fine = explode("/", $fine);
+                  $fine_gg = $arr_fine[0];
+                  $fine_mm = $arr_fine[1];
+                  $fine_aa = $arr_fine[2];
+                  $date_diff = mktime(12, 0, 0, $fine_mm, $fine_gg, $fine_aa) - mktime(12, 0, 0, $partenza_mm, $partenza_gg, $partenza_aa);
+                  $date_diff  = floor(($date_diff / 60 / 60 / 24) / $tipo);
+                  return $date_diff;
+              }
+              $diff=0;
+              $diff1=-datediff("S", date("d/m/Y"), "05/10/2015");
+
+                if (($diff1-5)<5 && ($diff1-5)>0) {
+                $diff1 =$diff1-5;
+              }elseif (($diff1-5)>0){
+                    $diff1 =$diff1-10;
+              }
+              if (($diff1-5)<5 && ($diff1-5)>0) {
+              $diff1 =$diff1-5;
+            }elseif (($diff1-5)>0){
+                  $diff1 =$diff1-10;
+            }
+              if (($diff1-5)<5 && ($diff1-5)>0) {
+              $diff1 =$diff1-5;
+              }elseif (($diff1-5)>0){
+                $diff1 =$diff1-10;
+            }
+            if (($diff1-5)<5 && ($diff1-5)>0) {
+            $diff1 =$diff1-5;
+            }elseif (($diff1-5)>0){
+              $diff1 =$diff1-10;
+            }
+      $reply = "Mensa scolastica. Menu :\n".$data->get_mensa(strtoupper(substr($nome_giorno, 0, 4)),"Primaria_Media-Aut_Inverno",$diff1);
+      $content = array('chat_id' => $chat_id, 'text' => $reply,'disable_web_page_preview'=>true);
+      $telegram->sendMessage($content);
+    	$log=$today. ";mensa scolastica sent;" .$chat_id. "\n";
+
+
+  	}elseif ($text == "/eventi culturali" || $text == "eventi culturali") {
         $reply = "Eventi culturali in programmazione:\n";
         $reply .= $data->get_events();
         //  echo $reply;
@@ -228,12 +491,14 @@ echo $reply;
 				 - mappare una segnalazione inviando la posizione tramite la molletta in basso a sinistra.
 				 Applicazione sviluppata da Piero Paolicelli @piersoft (agosto 2015). Licenza MIT codice in riuso da : http://iltempe.github.io/Emergenzeprato/
           \nFonti:
+          Spese Correnti      -> Soldipubblici.gov.it Lic. CC-BY 3.0
           Bollettini rischi   -> Protezione Civile di Lecce su dati.comune.lecce.it tramite il programma InfoAlert365
           Eventi culturali    -> piattaforma dati.comune.lecce.it fonte Lecce Events
           Qualtà dell'Aria    -> piattaforma dati.comune.lecce.it
           defibrillatori DAE  -> piattaforma dati.comune.lecce.it
           Farmacie            -> piattaforma dati.comune.lecce.it
           Monumenti           -> piattaforma dati.comune.lecce.it
+          Mensa scolastica    -> piattaforma dati.comune.lecce.it
           Benzinai            -> piattaforma openstreemap Lic. odBL
           Musei               -> piattaforma openstreemap Lic. odBL
           Meteo e temperatura -> Api pubbliche di www.wunderground.com
@@ -306,8 +571,16 @@ echo $reply;
 				$telegram->sendMessage($content);
 				$log=$today. ";notification reset;" .$chat_id. "\n";
 			}
+      elseif ($text=="spese correnti" || $text =="/spese correnti")
+      {
+      $forcehide=$telegram->buildForceReply(true);
+
+      $content = array('chat_id' => $chat_id, 'text' => "Inserisci la voce di spesa corrente da cercare anteponendo il simbolo ? esempio ?spese postali ", 'reply_markup' =>$forcehide, 'reply_to_message_id' =>$bot_request_message_id);
+
+      $bot_request_message=$telegram->sendMessage($content);
+      exit;
 			//----- gestione segnalazioni georiferite : togliere per non gestire le segnalazioni georiferite -----
-      elseif($location!=null)
+    }elseif($location!=null)
       {
       //  $reply = "Funzione non ancora implementata";
 
@@ -323,7 +596,6 @@ echo $reply;
 				//inserisce la segnalazione nel DB delle segnalazioni georiferite
 
         $response=$telegram->getData();
-
 
     $type=$response["message"]["video"]["file_id"];
     $text =$response["message"] ["text"];
@@ -591,6 +863,7 @@ echo $reply;
     		}
 			//comando errato
 			else{
+
 				 $reply = "Hai selezionato un comando non previsto";
 				 $content = array('chat_id' => $chat_id, 'text' => $reply);
 				 $telegram->sendMessage($content);
@@ -607,7 +880,7 @@ echo $reply;
 			$this->create_keyboard($telegram,$chat_id);
 
 			//log
-			file_put_contents(dirname(__FILE__).'/./telegram.log', $log, FILE_APPEND | LOCK_EX);
+			file_put_contents(dirname(__FILE__).'/./db/telegram.log', $log, FILE_APPEND | LOCK_EX);
 
 			//db
 		//	$statement = "INSERT INTO " . DB_TABLE_LOG ." (date, text, chat_id, user_id, location, reply_to_msg) VALUES ('" . $today . "','" . $text . "','" . $chat_id . "','" . $user_id . "','" . $location . "','" . $reply_to_msg . "')";
@@ -619,7 +892,7 @@ echo $reply;
 	// Crea la tastiera
 	 function create_keyboard($telegram, $chat_id)
 		{
-				$option = array(["meteo oggi","previsioni"],["bollettini rischi","temperatura"],["eventi culturali","qualità aria"],["defibrillatori","orari scuole"],["tariffasosta","monumenti"],["traffico","informazioni"]);
+				$option = array(["meteo oggi","previsioni"],["bollettini rischi","temperatura"],["eventi culturali","qualità aria"],["mensa scuole","orari scuole"],["tariffasosta","monumenti"],["defibrillatori","traffico"],["spese correnti","informazioni"]);
 				$keyb = $telegram->buildKeyBoard($option, $onetime=false);
 				$content = array('chat_id' => $chat_id, 'reply_markup' => $keyb, 'text' => "[seleziona un'etichetta oppure clicca sulla graffetta \xF0\x9F\x93\x8E e poi 'posizione'. ]");
 				$telegram->sendMessage($content);
@@ -641,6 +914,13 @@ echo $reply;
   				$content = array('chat_id' => $chat_id, 'reply_markup' => $keyb, 'text' => "[Seleziona la tipologia di scuola. ]");
   				$telegram->sendMessage($content);
   		}
+      function create_keyboard_temp_mensa($telegram, $chat_id)
+       {
+           $option = array(["Infanzia-Aut_Inverno","Infanzia-Primavera"],["Primaria_Media-Aut_Inverno","Primaria_Media_Primavera"]);
+           $keyb = $telegram->buildKeyBoard($option, $onetime=false);
+           $content = array('chat_id' => $chat_id, 'reply_markup' => $keyb, 'text' => "[Seleziona la tipologia di scuola. ]");
+           $telegram->sendMessage($content);
+       }
     //crea la tastiera per farmacie
      function create_keyboard_poi($telegram, $chat_id)
       {
