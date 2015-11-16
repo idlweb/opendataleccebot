@@ -232,7 +232,7 @@ $db = NULL;
                 break;
                 case "M" : $tipo = (365 / 12);
                 break;
-                case "S" : $tipo = (365 / 52);
+                case "S" : $tipo = (365 / 53);
                 break;
                 case "G" : $tipo = 1;
                 break;
@@ -249,7 +249,7 @@ $db = NULL;
             $date_diff  = floor(($date_diff / 60 / 60 / 24) / $tipo);
             return $date_diff;
         }
-        $diff=0;
+        $diff=1;
         $diff1=-datediff("S", date("d/m/Y"), "05/10/2015");
 
           if (($diff1-5)<5 && ($diff1-5)>0) {
@@ -294,7 +294,7 @@ $db = NULL;
                       break;
                       case "M" : $tipo = (365 / 12);
                       break;
-                      case "S" : $tipo = (365 / 52);
+                      case "S" : $tipo = (365 / 53);
                       break;
                       case "G" : $tipo = 1;
                       break;
@@ -311,7 +311,7 @@ $db = NULL;
                   $date_diff  = floor(($date_diff / 60 / 60 / 24) / $tipo);
                   return $date_diff;
               }
-              $diff=0;
+              $diff=1;
               $diff1=-datediff("S", date("d/m/Y"), "05/10/2015");
 
                 if (($diff1-5)<5 && ($diff1-5)>0) {
@@ -356,7 +356,7 @@ $db = NULL;
                       break;
                       case "M" : $tipo = (365 / 12);
                       break;
-                      case "S" : $tipo = (365 / 52);
+                      case "S" : $tipo = (365 / 53);
                       break;
                       case "G" : $tipo = 1;
                       break;
@@ -373,7 +373,7 @@ $db = NULL;
                   $date_diff  = floor(($date_diff / 60 / 60 / 24) / $tipo);
                   return $date_diff;
               }
-              $diff=0;
+              $diff=1;
               $diff1=-datediff("S", date("d/m/Y"), "05/10/2015");
 
                 if (($diff1-5)<5 && ($diff1-5)>0) {
@@ -418,7 +418,7 @@ $db = NULL;
                       break;
                       case "M" : $tipo = (365 / 12);
                       break;
-                      case "S" : $tipo = (365 / 52);
+                      case "S" : $tipo = (365 / 53);
                       break;
                       case "G" : $tipo = 1;
                       break;
@@ -435,7 +435,7 @@ $db = NULL;
                   $date_diff  = floor(($date_diff / 60 / 60 / 24) / $tipo);
                   return $date_diff;
               }
-              $diff=0;
+              $diff=1;
               $diff1=-datediff("S", date("d/m/Y"), "05/10/2015");
 
                 if (($diff1-5)<5 && ($diff1-5)>0) {
