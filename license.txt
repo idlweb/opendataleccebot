@@ -18,4 +18,4 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-Codice riadattato da @piersoft da Emergenze Prato di Matteo Tempestini, 
+Codice di @piersoft con riadattamenti da Emergenze Prato di Matteo Tempestini, tutti i dataset seguono la licenza opendata Lic. CC-BY o CC0 (monumenti). I dati meteo e previsioni sono copyright Weather Underground 
