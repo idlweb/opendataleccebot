@@ -4,16 +4,17 @@
 
 include('settings_t.php');
 
-function give_osm_data($lat,$lon,$tag)
+function give_osm_data($lat,$lon,$tag,$around)
 {
 
-	$around =AROUND; 				//Number of meters to calculate radius to search
+	//$around =AROUND; 				//Number of meters to calculate radius to search
 	$max=MAX;						//max number of points to search
 	 						//tag to search accoring to Overpass_API Query Language
 
 	//inserire qui la query Overpass modificando i paramentri
-	$query = 'node(around:'.$around.','.$lat.','.$lon.')['.$tag.'];out '.$max.';';
-
+//		$query = '(node(around:'.$around.','.$lat.','.$lon.')['.$tag.'];way(around:'.$around.','.$lat.','.$lon.')['.$tag.'];relation(around:'.$around.','.$lat.','.$lon.')['.$tag.'];);out body; >;out skel qt '.$max.';';
+$query .= 'node(around:'.$around.','.$lat.','.$lon.')['.$tag.'];out '.$max.';';
+//$query .= 'relation(around:'.$around.','.$lat.','.$lon.')['.$tag.'];out '.$max.';';
 	$context = stream_context_create( array('http' => array(
 		'method'  => 'POST',
 		'header' => array('Content-Type: application/x-www-form-urlencoded'), //comment out headers for attachment to app engine

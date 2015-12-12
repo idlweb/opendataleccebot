@@ -4,6 +4,183 @@ include(dirname(__FILE__).'/../settings_t.php');
 
 class getdata {
 
+  public function get_news(){
+    $html = file_get_contents('http://www.comune.lecce.it/Feeds/news');
+    $html=htmlspecialchars_decode($html);
+    //  $html=str_replace("http://www.comune.lecce.it/comune/albo-pretorio?DocumentId=","",$html);
+    $html=preg_replace( "/\r|\n/", "", $html );
+    $html=str_replace( "a10:", "atom", $html );
+    //echo $html;
+    if (strpos($html,'<channel>') == false) {
+    $content = array('chat_id' => $chat_id, 'text' => "Non ci risultano news sui bandi",'disable_web_page_preview'=>true);
+      $telegram->sendMessage($content);
+    }
+
+    $doc = new DOMDocument;
+    $doc->loadHTML($html);
+    //echo $doc;
+    $xpa     = new DOMXPath($doc);
+    $divs0   = $xpa->query('//item/title');
+    $divs1   = $xpa->query('//item/title');
+    $divs3   = $xpa->query('//atomcontent');
+    $divs2   = $xpa->query('//item/link');
+
+    $dival=[];
+    $diva3=[];
+    $diva1=[];
+    $diva2=[];
+
+    $count=0;
+    foreach($divs0 as $div0) {
+    $count++;
+    }
+    //echo "Count: ".$count."\n";
+
+    foreach($divs1 as $div1) {
+
+          array_push($diva1,$div1->nodeValue);
+    }
+
+    foreach($divs2 as $div2) {
+
+          array_push($diva2,$div2->nodeValue);
+    }
+
+    foreach($divs3 as $div3) {
+      //  echo "Data: ".$div3->nodeValue."\n";
+        array_push($diva3,$div3->nodeValue);
+
+    }
+
+    //$titolo=str_replace(" ","%20",$titolo);
+    //$url ="https://docs.google.com/spreadsheets/d/1bjEGyI0uXDoiwwPFJGUVmpVLzbp3P5C16t8Zdub2zis/pub?output=csv";
+
+    $csv = array_map('str_getcsv', file("https://spreadsheets.google.com/tq?tqx=out:csv&tq=SELECT%20A%20WHERE%20A%20IS%20NOT%20NULL%20&key=1V2WgbYbTVT2ICsZVcSxLPxsPSJ67U1qkeW2GEep38VQ"));
+
+    $inizio=1;
+    $homepage ="";
+    //  echo $url;
+    //$csv = array_map('str_getcsv', file($url));
+
+
+    //$count=3;
+
+    for ($i=0;$i<14;$i++){
+    $alert.="\n\n";
+    $alert.= "News: ".$diva1[$i]."\n";
+    $alert.= substr($diva3[$i], 0, 400)."..[....]\n";
+    $alert.= "Link: ".html_entity_decode($csv[$i][0])."\n";
+
+    $alert.="\n__________________";
+
+    }
+    return $alert;
+  }
+    public function get_bandi(){
+      $html = file_get_contents('http://www.comune.lecce.it/AlboPretorioRss.aspx?cat=Bandi%20ed%20esiti%20di%20gara');
+      $html=htmlspecialchars_decode($html);
+      //  $html=str_replace("http://www.comune.lecce.it/comune/albo-pretorio?DocumentId=","",$html);
+      $html=preg_replace( "/\r|\n/", "", $html );
+      //echo $html;
+      if (strpos($html,'<channel>') == false) {
+      $content = array('chat_id' => $chat_id, 'text' => "Non ci risultano news sui bandi",'disable_web_page_preview'=>true);
+        $telegram->sendMessage($content);
+      }
+
+      $doc = new DOMDocument;
+      $doc->loadHTML($html);
+      //echo $doc;
+      $xpa     = new DOMXPath($doc);
+      $divs0   = $xpa->query('//item/title');
+      $divs1   = $xpa->query('//item/title');
+      $divs3   = $xpa->query('//channel/item/link');
+      $divs2   = $xpa->query('//item/description');
+
+      $dival=[];
+      $diva3=[];
+      $diva1=[];
+      $diva2=[];
+
+      $count=0;
+      foreach($divs0 as $div0) {
+      $count++;
+      }
+      //echo "Count: ".$count."\n";
+
+      foreach($divs1 as $div1) {
+
+            array_push($diva1,$div1->nodeValue);
+      }
+
+      foreach($divs2 as $div2) {
+
+            array_push($diva2,$div2->nodeValue);
+      }
+
+      foreach($divs3 as $div3) {
+        //  echo "Data: ".$div3->nodeValue."\n";
+          array_push($diva3,$div3->nodeValue);
+
+      }
+
+      $titolo=str_replace(" ","%20",$titolo);
+      //$url ="https://docs.google.com/spreadsheets/d/1bjEGyI0uXDoiwwPFJGUVmpVLzbp3P5C16t8Zdub2zis/pub?output=csv";
+
+      $csv = array_map('str_getcsv', file("https://spreadsheets.google.com/tq?tqx=out:csv&tq=SELECT%20A%20WHERE%20A%20IS%20NOT%20NULL%20&key=1bjEGyI0uXDoiwwPFJGUVmpVLzbp3P5C16t8Zdub2zis"));
+
+      $inizio=1;
+      $homepage ="";
+      //  echo $url;
+      //$csv = array_map('str_getcsv', file($url));
+
+
+      //$count=3;
+
+      for ($i=0;$i<14;$i++){
+      $alert.="\n\n";
+      $alert.= $diva1[$i]."\n";
+      $alert.= html_entity_decode($diva2[$i])."\n";
+      $alert.= "Link: ".$csv[0][0]."\n";
+      $alert.="\n__________________";
+
+      }
+  return   $alert;
+    }
+
+
+
+  public function get_libro($titolo)
+  {
+    $titolo=str_replace(" ","%20",$titolo);
+    $url ="https://spreadsheets.google.com/tq?tqx=out:csv&tq=SELECT%20%2A%20WHERE%20C%20LIKE%20%27%25".$titolo;
+    $url .="%25%27%20OR%20B%20LIKE%20%27%25".$titolo;
+    $url .="%25%27&key=1gqlrIL9qch6Ir9cXxkn0sOjyDwSA5uYM_hD7MX_q6Cs";
+    $inizio=1;
+    $homepage ="";
+   //  echo $url;
+    $csv = array_map('str_getcsv', file($url));
+
+    $count = 0;
+    foreach($csv as $data=>$csv1){
+      $count = $count+1;
+    }
+  //  echo $count;
+    for ($i=$inizio;$i<$count;$i++){
+
+      $homepage .="\n";
+      $homepage .="Autore: ".$csv[$i][1]."\n";
+      $homepage .="Titolo: ".$csv[$i][2]."\n";
+      $homepage .="Casa Editrice: ".$csv[$i][3]."\n";
+      $homepage .="Genere: ".$csv[$i][4]."\n";
+      $homepage .="Lingua: ".$csv[$i][5]."\n";
+      $homepage .="Anno/Edizione: ".$csv[$i][6]."\n";
+      $homepage .="Stato: ".$csv[$i][7]."\n";
+      $homepage .="Numero ID: ".$csv[$i][0]."\n";
+      $homepage .="____________\n";
+
+  }
+return   $homepage;
+}
   public function get_fermateba($lat,$lon,$r)
   {
 
@@ -359,7 +536,7 @@ public function get_events()
 
     $longUrl = "http://www.openstreetmap.org/?mlat=".$csv[$i][18]."&mlon=".$csv[$i][19]."#map=19/".$csv[$i][18]."/".$csv[$i][19];
 
-    $apiKey = API;
+    $apiKey = APIT;
 
     $postData = array('longUrl' => $longUrl, 'key' => $apiKey);
     $jsonData = json_encode($postData);
@@ -435,9 +612,9 @@ $eventi .="\n";
 	$homepage .= $csv[$i][4]." ".$csv[$i][5]." ".$csv[$i][6]."\n";
 //	$homepage = "Descrizione: ".utf8_encode($csv[$i][5])."\n";
 
-$longUrl = "http://www.openstreetmap.org/?mlat=".$csv[$i][1]."&mlon=".$csv[$i][2]."#map=19/".$csv[$i][0]."/".$csv[$i][1];
+$longUrl = "http://www.openstreetmap.org/?mlat=".$csv[$i][1]."&mlon=".$csv[$i][2]."#map=19/".$csv[$i][1]."/".$csv[$i][2];
 
-$apiKey = API;
+$apiKey = APIT;
 
 $postData = array('longUrl' => $longUrl, 'key' => $apiKey);
 $jsonData = json_encode($postData);
@@ -480,18 +657,90 @@ $shortLink = get_object_vars($json);
 
 	}
 
+
+
+public function get_hotspot($where)
+{
+$homepage="";
+
+
+// un google sheet fa il parsing del dataset presente su dati.comune.lecce.it
+$csv = array_map('str_getcsv', file("https://spreadsheets.google.com/tq?tqx=out:csv&tq=SELECT%20A%2CB%2CC%2CD%2CE%20WHERE%20D%20IS%20NOT%20NULL&key=1s6dr0RRIak4zL31qxgebz_Wkni_rLwDyoegSjbjU9NQ"));
+//	$homepage  =$csv[0][0];
+//	$homepage .="\n";
+
+$count = 0;
+foreach($csv as $data=>$csv1){
+   $count = $count+1;
+}
+for ($i=1;$i<$count;$i++){
+
+$homepage .="\n";
+$homepage .="Sede: ".$csv[$i][0]."\n";
+$homepage .="Numero HS: ".$csv[$i][2]."\n";
+//	$homepage = "Descrizione: ".utf8_encode($csv[$i][5])."\n";
+
+$longUrl = "http://www.openstreetmap.org/?mlat=".$csv[$i][3]."&mlon=".$csv[$i][4]."#map=19/".$csv[$i][3]."/".$csv[$i][4];
+
+$apiKey = APIT;
+
+$postData = array('longUrl' => $longUrl, 'key' => $apiKey);
+$jsonData = json_encode($postData);
+
+$curlObj = curl_init();
+
+curl_setopt($curlObj, CURLOPT_URL, 'https://www.googleapis.com/urlshortener/v1/url?key='.$apiKey);
+curl_setopt($curlObj, CURLOPT_RETURNTRANSFER, 1);
+curl_setopt($curlObj, CURLOPT_SSL_VERIFYPEER, 0);
+curl_setopt($curlObj, CURLOPT_HEADER, 0);
+curl_setopt($curlObj, CURLOPT_HTTPHEADER, array('Content-type:application/json'));
+curl_setopt($curlObj, CURLOPT_POST, 1);
+curl_setopt($curlObj, CURLOPT_POSTFIELDS, $jsonData);
+
+$response = curl_exec($curlObj);
+
+// Change the response json string to object
+$json = json_decode($response);
+
+curl_close($curlObj);
+//  $reply="Puoi visualizzarlo su :\n".$json->id;
+$shortLink = get_object_vars($json);
+//return $json->id;
+
+
+
+
+$homepage .="Puoi visualizzarlo su: ".$shortLink['id'];
+$homepage .="\n";
+//	$homepage .="Per vedere tutti i luoghi dove è presente un defribillatore clicca qui: http://u.osmfr.org/m/54531/"
+
+}
+
+if (empty($csv[1][0])) $homepage="Errore generico, ti preghiamo di selezionare nuovamente il comando";
+
+
+ //echo $homepage;
+
+ return $homepage;
+
+}
+
+
+
+
   public function get_mensa($day,$where,$s)
 	{
     $homepage="";
-    $url .="https://spreadsheets.google.com/tq?tqx=out:csv&tq=SELECT%20%2A%20WHERE%20B%20LIKE%20%27%25".$day;
-
+    $url ="https://spreadsheets.google.com/tq?tqx=out:csv&tq=SELECT%20%2A%20WHERE%20B%20LIKE%20%27%25".$day;
+$scuola="Infanzia";
+if ($where=="Primaria_Media_Primavera" || $where=="Primaria_Media_Aut_Inverno") $scuola="Primaria";
 $inizio=1;
-if ($where=="Infanzia-Aut_Inverno")           $url .="%25%27%20AND%20A%20LIKE%20%27%25".$s."%25%27&key=1suKIY8FJdmzRsAk0zjyVVqguV4aN8Y5m1r9Jq1Kzxo0";
-elseif ($where=="Infanzia-Primavera")         $url .="%25%27%20AND%20A%20LIKE%20%27%25".$s."%25%27&key=1VT1obAyy-6z0aoBqHoKaFkEf6qB_XZP0L0yqAVYxgNA";
+if ($where=="Infanzia_Aut_Inverno")           $url .="%25%27%20AND%20A%20LIKE%20%27%25".$s."%25%27&key=1suKIY8FJdmzRsAk0zjyVVqguV4aN8Y5m1r9Jq1Kzxo0";
+elseif ($where=="Infanzia_Primavera")         $url .="%25%27%20AND%20A%20LIKE%20%27%25".$s."%25%27&key=1VT1obAyy-6z0aoBqHoKaFkEf6qB_XZP0L0yqAVYxgNA";
 elseif ($where=="Primaria_Media_Primavera")  {
   $url .="%25%27%20AND%20A%20LIKE%20%27%25".$s."%25%27&key=1LPEDTnDUmW2gNTtMQGIidBgQojT9pYJ9PZrhz1q-V-Y";
   $inizio=0;
-} elseif ($where=="Primaria_Media-Aut_Inverno")  {
+} elseif ($where=="Primaria_Media_Aut_Inverno")  {
   $url .="%25%27%20AND%20A%20LIKE%20%27%25".$s."%25%27&key=1L-da7CSdv92Bcrfxfle76dFw9BxGEZNJYabIBP3uc1I";
 $inizio=0;
 } //  echo $url;
@@ -506,8 +755,8 @@ $inizio=0;
   //  echo $count;
     for ($i=$inizio;$i<$count;$i++){
 
-      $homepage .="\n";
-      $homepage .="Settimana: ".$csv[$i][0]."\n";
+      $homepage .="\nMensa scolastica per la scuola: ".$scuola.". Menu di oggi :\n\n";
+    //  $homepage .="Settimana: ".$csv[$i][0]."\n";
       $homepage .="Giorno: ".$csv[$i][1]."\n";
       $homepage .="Primo: ".$csv[$i][2]."\n";
       $homepage .="Secondo: ".$csv[$i][3]."\n";
@@ -915,7 +1164,7 @@ $homepage .="Indir.: ".$csv[$i][4]."\n";
       if ($csv[$i][4] != NULL) $homepage .="Wikipedia: ".$csv[$i][4]."\n";
       $longUrl = "http://www.openstreetmap.org/?mlat=".$csv[$i][2]."&mlon=".$csv[$i][3]."#map=19/".$csv[$i][2]."/".$csv[$i][3];
 
-       $apiKey = API;
+       $apiKey = APIT;
 
        $postData = array('longUrl' => $longUrl, 'key' => $apiKey);
        $jsonData = json_encode($postData);
