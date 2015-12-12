@@ -661,7 +661,7 @@ $db = NULL;
 			//crediti
 			elseif ($text == "/informazioni" || $text == "informazioni") {
 				 $reply = ("openDataLecceBot e' un servizio sperimentale e dimostrativo per riuso degli openData del Comune di Lecce.
-				 Applicazione sviluppata da Francesco Piero Paolicelli @piersoft.
+				 Applicazione sviluppata da Francesco Piero Paolicelli @piersoft. Codice sorgente per il riuso gratuito: https://goo.gl/bmUNbK
           \nFonti:
           Spese Correnti      -> Soldipubblici.gov.it Lic. CC-BY 3.0
           Bollettini rischi   -> Protezione Civile di Lecce - dataset su dati.comune.lecce.it tramite il progetto InfoAlert365 (A cura: Gaetano Lipari)
