@@ -105,7 +105,7 @@ $db = NULL;
                  $log=$today. ";libro sent;" .$chat_id. "\n";
           }
           elseif ($text == "/News" || $text == "News") {
-            $reply = "Sto interrogano la banca dati per le ultime news dal Comune di Lecce...\n";
+            $reply = "Sto interrogando la banca dati per le ultime news dal Comune di Lecce...\n";
             $content = array('chat_id' => $chat_id, 'text' => $reply,'disable_web_page_preview'=>true);
             $telegram->sendMessage($content);
             $reply1 = $data->get_news();
@@ -121,7 +121,7 @@ $db = NULL;
               $log=$today. ";bandi e gare sent;" .$chat_id. "\n";
       		}
           elseif ($text == "/bandi e gare" || $text == "bandi e gare") {
-            $reply = "Sto interrogano la banca dati per le ultime news su Bandi e Gare...\n";
+            $reply = "Sto interrogando la banca dati per le ultime news su Bandi e Gare...\n";
             $content = array('chat_id' => $chat_id, 'text' => $reply,'disable_web_page_preview'=>true);
             $telegram->sendMessage($content);
             $reply1 = $data->get_bandi();
